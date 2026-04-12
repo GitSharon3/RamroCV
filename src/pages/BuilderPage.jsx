@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const BuilderPage = () => {
   const [mobileView, setMobileView] = useState('edit');
   const [isMobile, setIsMobile] = useState(false);
+  const [stepOneTab, setStepOneTab] = useState('template');
   const { wizardStep, setWizardStep, activeTemplate, personalInfo, setPhoto, loadSampleData } = useResumeStore();
   const navigate = useNavigate();
 
@@ -105,51 +106,87 @@ const BuilderPage = () => {
             >
               <div className="text-center py-10">
                 <h1 className="text-4xl sm:text-5xl font-black text-gray-900 mb-6 font-playfair">
-                   Resume templates
+                   Start your resume
                 </h1>
                 <p className="text-gray-500 text-lg mb-8 max-w-xl mx-auto">
-                   Simple to use and ready in minutes resume templates — give it a try for free now!
+                   Pick a beautiful design and fill in your details, or import existing LaTeX code.
                 </p>
-                <div className="flex justify-center gap-4 mb-12">
+
+                {/* --- Tab Slider --- */}
+                <div className="flex justify-center mb-10">
+                  <div className="bg-gray-100 p-1.5 rounded-full inline-flex relative shadow-inner">
+                    <button
+                      onClick={() => setStepOneTab('template')}
+                      className={`relative z-10 px-6 py-2.5 rounded-full text-sm font-bold transition-colors ${stepOneTab === 'template' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      Choose a Design
+                    </button>
+                    <button
+                      onClick={() => setStepOneTab('latex')}
+                      className={`relative z-10 px-6 py-2.5 rounded-full text-sm font-bold transition-colors ${stepOneTab === 'latex' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      Import LaTeX
+                    </button>
+                    <div
+                      className="absolute top-1.5 left-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-full shadow-sm transition-transform duration-300 ease-out"
+                      style={{
+                        transform: stepOneTab === 'template' ? 'translateX(0)' : 'translateX(100%)',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-center gap-4 mb-4">
                    <button 
                      onClick={() => setWizardStep(2)}
                      className="text-sky-500 font-bold hover:underline"
                    >
-                     Choose later
+                     Skip and choose later
                    </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
-                  <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-xl shadow-gray-100/50">
-                     <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2 justify-center">
-                        <Sparkles className="text-amber-500" size={20} />
-                        Choose a design
-                     </h3>
-                     <TemplateSwitcher />
-                  </div>
-
-                  <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-xl shadow-gray-100/50">
-                     <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2 justify-center">
-                        <FileText className="text-sky-500" size={20} />
-                        Already have a resume?
-                     </h3>
-                     <div className="p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                        <LatexImporter />
-                        <p className="text-[10px] text-gray-400 mt-4 text-center">
-                           Import your existing LaTeX code to auto-populate the data.
-                        </p>
-                     </div>
-                     <div className="mt-8">
-                        <p className="text-xs text-gray-400 mb-4 italic">Or start with sample data to see how it works</p>
-                        <button 
-                          onClick={() => { loadSampleData(); setWizardStep(2); }}
-                          className="w-full py-3 bg-gray-50 border border-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
-                        >
-                          <Sparkles size={16} className="text-sky-400" />
-                          Load Sample Details
-                        </button>
-                     </div>
-                  </div>
+                {/* --- Step 1 Content Area --- */}
+                <div className="min-h-[450px]">
+                  {stepOneTab === 'template' ? (
+                    <motion.div 
+                      key="template-tab"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-xl shadow-gray-100/50 max-w-5xl mx-auto text-left"
+                    >
+                       <TemplateSwitcher showNextButton={true} onNext={() => setWizardStep(2)} />
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      key="latex-tab"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-xl shadow-gray-100/50 max-w-xl mx-auto"
+                    >
+                       <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2 justify-center">
+                          <FileText className="text-sky-500" size={20} />
+                          Already have a resume?
+                       </h3>
+                       <div className="p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                          <LatexImporter />
+                          <p className="text-[10px] text-gray-400 mt-4 text-center">
+                             Import your existing LaTeX code to auto-populate the data.
+                          </p>
+                       </div>
+                       <div className="mt-8">
+                          <p className="text-xs text-gray-400 mb-4 italic">Or start with sample data to see how it works</p>
+                          <button 
+                            onClick={() => { loadSampleData(); setWizardStep(2); }}
+                            className="w-full py-3 bg-gray-50 border border-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
+                          >
+                            <Sparkles size={16} className="text-sky-400" />
+                            Load Sample Details
+                          </button>
+                       </div>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             </motion.div>

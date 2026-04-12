@@ -10,7 +10,6 @@ import Lumina from '../templates/Lumina';
 import Zenith from '../templates/Zenith';
 import Horizon from '../templates/Horizon';
 import Nova from '../templates/Nova';
-import ATS from '../templates/ATS';
 import TemplateSwitcher from './TemplateSwitcher';
 
 const ResumePreview = () => {
@@ -53,8 +52,7 @@ const ResumePreview = () => {
     'lumina': Lumina,
     'zenith': Zenith,
     'horizon': Horizon,
-    'nova': Nova,
-    'ats': ATS
+    'nova': Nova
   }[activeTemplate] || Celestial;
 
   return (
