@@ -12,11 +12,11 @@ import Horizon from '../templates/Horizon';
 import Nova from '../templates/Nova';
 import TemplateSwitcher from './TemplateSwitcher';
 
-const ResumePreview = () => {
+const ResumePreview = ({ hideTemplateSwitcher, initialZoom = 0.75 }) => {
   const { activeTemplate, sectionOrder, personalInfo, education, experience, skills, projects, hobbies } = useResumeStore();
   const [showCopied, setShowCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [zoom, setZoom] = useState(0.75);
+  const [zoom, setZoom] = useState(initialZoom);
 
   const resumeData = { personalInfo, education, experience, skills, projects, hobbies, sectionOrder };
 
@@ -58,9 +58,11 @@ const ResumePreview = () => {
   return (
     <div className="flex flex-col h-full gap-4">
       {/* Template Switcher */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-        <TemplateSwitcher />
-      </div>
+      {!hideTemplateSwitcher && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          <TemplateSwitcher />
+        </div>
+      )}
 
       {/* Action Bar */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">

@@ -198,13 +198,13 @@ const BuilderPage = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-6"
             >
-              <div className="lg:sticky lg:top-[88px] lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto pb-4 scrollbar-hide">
+              <div className="lg:col-span-5 lg:sticky lg:top-[88px] lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto pb-4 scrollbar-hide">
                 <ResumeForm />
               </div>
-              <div className="h-full">
-                <ResumePreview />
+              <div className="lg:col-span-7 h-full">
+                <ResumePreview hideTemplateSwitcher={true} initialZoom={0.85} />
               </div>
             </motion.div>
           )}
@@ -215,11 +215,11 @@ const BuilderPage = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
-              className="max-w-5xl mx-auto"
+              className="max-w-6xl mx-auto"
             >
               <div className="flex flex-col lg:flex-row gap-10">
                 <div className="flex-1 order-2 lg:order-1">
-                  <ResumePreview />
+                  <ResumePreview hideTemplateSwitcher={false} initialZoom={0.85} />
                 </div>
                 <div className="w-full lg:w-80 order-1 lg:order-2 space-y-6">
                   <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-gray-100/50 text-center">

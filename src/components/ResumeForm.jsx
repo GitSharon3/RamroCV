@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, GripVertical, Code2, User, Briefcase, GraduationCap, Wrench, FolderOpen, Heart, Image } from 'lucide-react';
+import { ChevronDown, GripVertical, Code2, User, Briefcase, GraduationCap, Wrench, FolderOpen, Heart, Image, ArrowRight } from 'lucide-react';
 import { useResumeStore } from '../store/resumeStore';
 import PersonalInfo from './PersonalInfo';
 import WorkExperience from './WorkExperience';
@@ -32,7 +32,7 @@ const TAB_EDIT = 'edit';
 const TAB_LATEX = 'latex';
 
 const ResumeForm = () => {
-  const { sectionOrder, reorderSections } = useResumeStore();
+  const { sectionOrder, reorderSections, setWizardStep } = useResumeStore();
   const [expandedSections, setExpandedSections] = useState(['personalInfo']);
   const [draggedSection, setDraggedSection] = useState(null);
   const [activeTab, setActiveTab] = useState(TAB_EDIT);
@@ -173,6 +173,19 @@ const ResumeForm = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Next Step Button */}
+      {activeTab === TAB_EDIT && (
+        <div className="pt-4 mt-2">
+          <button
+            onClick={() => setWizardStep(3)}
+            className="w-full py-4 bg-sky-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm shadow-sky-200 hover:bg-sky-600 transition-all text-sm uppercase tracking-wider"
+          >
+            Review & Download Resume
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
