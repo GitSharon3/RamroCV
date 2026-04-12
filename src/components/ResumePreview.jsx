@@ -4,7 +4,13 @@ import { downloadPDF, generateShareableLink } from '../utils/pdfExport';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ATSClassic from '../templates/ATSClassic';
-import BlueModern from '../templates/BlueModern';
+import Astralis from '../templates/Astralis';
+import Celestial from '../templates/Celestial';
+import Lumina from '../templates/Lumina';
+import Zenith from '../templates/Zenith';
+import Horizon from '../templates/Horizon';
+import Nova from '../templates/Nova';
+import ATS from '../templates/ATS';
 import TemplateSwitcher from './TemplateSwitcher';
 
 const ResumePreview = () => {
@@ -40,7 +46,16 @@ const ResumePreview = () => {
   const zoomIn = () => setZoom(z => Math.min(z + 0.1, 1.2));
   const zoomOut = () => setZoom(z => Math.max(z - 0.1, 0.4));
 
-  const TemplateComponent = activeTemplate === 'ats-classic' ? ATSClassic : BlueModern;
+  const TemplateComponent = {
+    'celestial': Celestial,
+    'ats-classic': ATSClassic,
+    'astralis': Astralis,
+    'lumina': Lumina,
+    'zenith': Zenith,
+    'horizon': Horizon,
+    'nova': Nova,
+    'ats': ATS
+  }[activeTemplate] || Celestial;
 
   return (
     <div className="flex flex-col h-full gap-4">

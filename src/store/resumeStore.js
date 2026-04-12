@@ -31,7 +31,8 @@ export const useResumeStore = create(
       hobbies: [],
 
       // UI State
-      activeTemplate: 'ats-classic',
+      wizardStep: 1, // 1: Choose Template, 2: Enter Details, 3: Download
+      activeTemplate: 'celestial',
       sectionOrder: ['personalInfo', 'experience', 'education', 'skills', 'projects', 'hobbies'],
 
       // Actions
@@ -129,6 +130,8 @@ export const useResumeStore = create(
         })),
 
       setActiveTemplate: (template) => set({ activeTemplate: template }),
+
+      setWizardStep: (step) => set({ wizardStep: step }),
 
       reorderSections: (newOrder) => set({ sectionOrder: newOrder }),
 

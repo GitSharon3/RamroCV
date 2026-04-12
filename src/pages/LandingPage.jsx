@@ -1,6 +1,16 @@
 import { Link } from 'react-router-dom';
 import { FileText, CheckCircle, Star, ArrowRight, Sparkles, Shield, Zap, Download, Users, BarChart3, ChevronRight, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useResumeStore } from '../store/resumeStore';
+
+// Import template assets
+import template1 from '../assets/template1.png';
+import template2 from '../assets/template2.png';
+import template3 from '../assets/template3.png';
+import template4 from '../assets/template4.png';
+import template5 from '../assets/template5.png';
+import template6 from '../assets/template6.png';
+import template7 from '../assets/template7.png';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -14,6 +24,17 @@ const fadeUp = {
 const BRAND_COLOR = '#0ea5e9'; // sky-500
 
 const LandingPage = () => {
+  const { setWizardStep, setActiveTemplate } = useResumeStore();
+
+  const handleStartBuilding = () => {
+    setWizardStep(1);
+  };
+
+  const handleSelectTemplate = (templateId) => {
+    setActiveTemplate(templateId);
+    setWizardStep(2);
+  };
+
   return (
     <div className="min-h-screen bg-white font-sans">
       {/* ─── Navbar ─── */}
@@ -82,6 +103,7 @@ const LandingPage = () => {
                 <Link
                   to="/builder"
                   id="hero-cta-new"
+                  onClick={handleStartBuilding}
                   className="inline-flex items-center gap-2 px-7 py-3.5 bg-sky-500 text-white rounded-xl text-sm font-bold hover:bg-sky-600 shadow-lg shadow-sky-200 hover:shadow-xl hover:shadow-sky-300 transition-all duration-200"
                 >
                   Create a New Resume
@@ -90,6 +112,7 @@ const LandingPage = () => {
                 <Link
                   to="/builder"
                   id="hero-cta-improve"
+                  onClick={handleStartBuilding}
                   className="inline-flex items-center gap-2 px-7 py-3.5 border-2 border-sky-200 text-sky-600 rounded-xl text-sm font-bold hover:bg-sky-50 transition-all duration-200"
                 >
                   Improve My Resume
@@ -298,102 +321,103 @@ const LandingPage = () => {
       </section>
 
       {/* ─── Templates Preview ─── */}
-      <section className="py-20 bg-sky-50/40">
-        <div className="max-w-6xl mx-auto px-5">
+      <section className="py-24 bg-sky-50/30 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-5 mb-16">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeUp}
-            className="text-center mb-14"
+            className="text-center"
           >
-            <h2 className="text-3xl font-extrabold text-gray-900 mb-3">
-              Choose from professional templates
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-gray-900 mb-6">
+              Expertly Crafted <span className="text-sky-500">Resume Dimensions</span>
             </h2>
-            <p className="text-gray-500 max-w-lg mx-auto">
-              Start with an ATS-ready classic or a stunning modern design. Switch anytime.
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto leading-relaxed">
+              Elevate your professional narrative with our diverse collection of ATS-optimized and designer layouts. 
+              Find the perfect architecture to showcase your career projectory.
             </p>
           </motion.div>
+        </div>
 
-          <div className="flex gap-6 overflow-x-auto pb-8 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-sky-200 scrollbar-track-transparent px-2 -mx-2">
-            {/* ATS Classic preview */}
-            <div className="bg-white rounded-2xl shadow-lg shadow-gray-100 border border-gray-100 overflow-hidden group hover:shadow-xl transition-shadow min-w-[320px] max-w-[320px] sm:min-w-[350px] sm:max-w-[350px] flex-shrink-0 snap-center">
-              <div className="p-6 pb-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <FileText size={16} className="text-gray-600" />
-                  <h3 className="font-bold text-gray-900">ATS Classic</h3>
-                </div>
-                <p className="text-xs text-gray-400">Machine-readable, black & white layout</p>
-              </div>
-              {/* Mini mockup */}
-              <div className="mx-6 mb-6 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                <div className="text-center mb-3 pb-2 border-b border-gray-300">
-                  <div className="h-3 w-32 bg-gray-800 rounded mx-auto mb-1.5" />
-                  <div className="h-1.5 w-40 bg-gray-300 rounded mx-auto" />
-                </div>
-                <div className="mb-2">
-                  <div className="h-2 w-28 bg-gray-700 rounded mb-1.5" />
-                  <div className="h-1.5 w-full bg-gray-100 rounded mb-1" />
-                  <div className="h-1.5 w-5/6 bg-gray-100 rounded mb-1" />
-                  <div className="h-1.5 w-4/6 bg-gray-100 rounded" />
-                </div>
-                <div className="border-t border-gray-200 pt-2 mt-2">
-                  <div className="h-2 w-20 bg-gray-700 rounded mb-1.5" />
-                  <div className="h-1.5 w-full bg-gray-100 rounded mb-1" />
-                  <div className="h-1.5 w-3/4 bg-gray-100 rounded" />
-                </div>
-              </div>
-              <div className="px-6 pb-5">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
-                  <CheckCircle size={12} /> ATS Compliant
-                </span>
-              </div>
-            </div>
+        {/* Manual Template Showcase */}
+        <div className="max-w-7xl mx-auto px-5">
+          <div className="flex gap-8 overflow-x-auto pb-12 snap-x snap-mandatory scrollbar-hide no-scrollbar -mx-5 px-5 lg:-mx-0 lg:px-0">
+            {[
+              { img: template1, id: 'celestial', name: 'Celestial', desc: 'Refined neutral tones' },
+              { img: template2, id: 'ats-classic', name: 'ATS Classic', desc: 'Machine readable' },
+              { img: template3, id: 'astralis', name: 'Astralis', desc: 'Classic & Professional' },
+              { img: template4, id: 'lumina', name: 'Lumina', desc: 'Modern 2-column with banner' },
+              { img: template5, id: 'zenith', name: 'Zenith', desc: 'Elegant centered header' },
+              { img: template6, id: 'horizon', name: 'Horizon', desc: 'Striking left sidebar' },
+              { img: template7, id: 'nova', name: 'Nova', desc: 'Bold & Impactful' },
+              { img: template2, id: 'ats', name: 'ATS', desc: 'Simple & Neat' },
+            ].map((tpl) => (
+              <div
+                key={`template-${tpl.id}`}
+                className="relative min-w-[280px] sm:min-w-[380px] bg-white rounded-[2rem] shadow-xl shadow-sky-100/40 border border-sky-50 overflow-hidden group snap-center transition-all duration-500 hover:shadow-2xl hover:shadow-sky-200/50"
+              >
+                {/* Image & Hover Container */}
+                <div className="relative aspect-[3/4] overflow-hidden">
+                  <img 
+                    src={tpl.img} 
+                    alt={tpl.name} 
+                    className="w-full h-full object-cover grayscale-[0.2] blur-[0px] group-hover:grayscale-0 group-hover:blur-[2px] transition-all duration-700 group-hover:scale-110"
+                  />
+                  
+                  {/* Premium Advanced Hover Overlay */}
+                  <div className="absolute inset-0 bg-sky-900/10 backdrop-blur-[0px] group-hover:backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-6 text-center">
+                    {/* Floating Template Badge */}
+                    <div className="absolute top-6 left-1/2 -translate-x-1/2 -translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100">
+                      <span className="px-4 py-1.5 bg-white/90 backdrop-blur rounded-full text-[10px] font-black text-sky-600 uppercase tracking-[0.2em] shadow-xl border border-white">
+                        {tpl.name}
+                      </span>
+                    </div>
 
-            {/* Blue Modern preview */}
-            <div className="bg-white rounded-2xl shadow-lg shadow-gray-100 border border-gray-100 overflow-hidden group hover:shadow-xl transition-shadow min-w-[320px] max-w-[320px] sm:min-w-[350px] sm:max-w-[350px] flex-shrink-0 snap-center">
-              <div className="p-6 pb-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Star size={16} className="text-sky-500" />
-                  <h3 className="font-bold text-gray-900">Blue Modern</h3>
-                </div>
-                <p className="text-xs text-gray-400">Professional 2-column with photo support</p>
-              </div>
-              {/* Mini mockup */}
-              <div className="mx-6 mb-6 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm flex">
-                <div className="w-20 bg-sky-700 p-3 flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-sky-500/50 border border-sky-400/50" />
-                  <div className="w-full space-y-1 mt-1">
-                    <div className="h-1 w-full bg-sky-500/40 rounded" />
-                    <div className="h-1 w-3/4 bg-sky-500/40 rounded" />
-                    <div className="h-1 w-full bg-sky-500/40 rounded" />
+                    {/* Main CTA Button */}
+                    <button 
+                      onClick={() => {
+                        setActiveTemplate(tpl.id);
+                        setWizardStep(2);
+                      }}
+                    >
+                      <Link 
+                        to="/builder" 
+                        className="inline-flex items-center gap-3 px-8 py-4 bg-sky-500 text-white font-bold rounded-2xl shadow-2xl shadow-sky-500/30 hover:bg-sky-600 hover:scale-105 active:scale-95 transition-all duration-300 translate-y-8 group-hover:translate-y-0"
+                      >
+                        <Sparkles size={18} className="animate-pulse" />
+                        Use This Template
+                      </Link>
+                    </button>
+
+                    {/* Subtitle */}
+                    <div className="mt-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-200">
+                      <p className="text-white text-xs font-semibold tracking-wide drop-shadow-md">{tpl.desc}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex-1 p-3 space-y-2">
-                  <div className="h-2.5 w-28 bg-sky-600 rounded mb-1" />
-                  <div className="h-1.5 w-full bg-gray-100 rounded" />
-                  <div className="h-1.5 w-4/5 bg-gray-100 rounded" />
-                  <div className="h-2 w-20 bg-sky-600 rounded mt-2 mb-1" />
-                  <div className="h-1.5 w-full bg-gray-100 rounded" />
-                  <div className="h-1.5 w-3/5 bg-gray-100 rounded" />
-                </div>
               </div>
-              <div className="px-6 pb-5">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-600 bg-sky-50 px-3 py-1 rounded-full">
-                  <Users size={12} /> Photo Support
-                </span>
-              </div>
+            ))}
+          </div>
+          
+          {/* Scroll controls hint */}
+          <div className="flex items-center justify-center gap-6 mt-4">
+            <div className="h-[2px] w-32 bg-sky-100 rounded-full relative overflow-hidden">
+               <motion.div 
+                 className="absolute inset-0 bg-sky-500"
+                 animate={{ x: [-128, 128] }}
+                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+               />
             </div>
-            
-            {/* Added "More coming soon" card to show it's horizontal */}
-            <div className="bg-sky-50/50 rounded-2xl shadow-inner border border-sky-100/50 overflow-hidden group min-w-[320px] max-w-[320px] sm:min-w-[350px] sm:max-w-[350px] flex-shrink-0 snap-center flex items-center justify-center">
-              <div className="text-center p-8 opacity-70">
-                <div className="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-sky-200">
-                  <Sparkles size={24} className="text-sky-400" />
-                </div>
-                <h3 className="font-bold text-gray-700 mb-1">More Templates</h3>
-                <p className="text-xs text-gray-500">Coming soon in future updates</p>
-              </div>
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+              Scroll horizontally to explore
+            </span>
+            <div className="h-[2px] w-32 bg-sky-100 rounded-full relative overflow-hidden">
+               <motion.div 
+                 className="absolute inset-0 bg-sky-500"
+                 animate={{ x: [-128, 128] }}
+                 transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
+               />
             </div>
           </div>
         </div>
