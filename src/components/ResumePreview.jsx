@@ -12,7 +12,7 @@ import Horizon from '../templates/Horizon';
 import Nova from '../templates/Nova';
 import TemplateSwitcher from './TemplateSwitcher';
 
-const ResumePreview = ({ hideTemplateSwitcher, initialZoom = 0.75 }) => {
+const ResumePreview = ({ hideTemplateSwitcher, hideActionBar, initialZoom = 0.75 }) => {
   const { activeTemplate, sectionOrder, personalInfo, education, experience, skills, projects, additionalSections } = useResumeStore();
   const [showCopied, setShowCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -64,59 +64,61 @@ const ResumePreview = ({ hideTemplateSwitcher, initialZoom = 0.75 }) => {
         </div>
       )}
 
-      {/* Action Bar */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleDownload}
-            disabled={isDownloading}
-            id="download-pdf-btn"
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-all font-medium text-sm disabled:opacity-50 shadow-sm shadow-sky-200"
-          >
-            <motion.div
-              animate={isDownloading ? { rotate: 360 } : { rotate: 0 }}
-              transition={{ duration: 1, repeat: isDownloading ? Infinity : 0, ease: 'linear' }}
+      {/* Action Bar - Hidden when hideActionBar is true */}
+      {!hideActionBar && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownload}
+              disabled={isDownloading}
+              id="download-pdf-btn"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-all font-medium text-sm disabled:opacity-50 shadow-sm shadow-sky-200"
             >
-              <Download size={16} />
-            </motion.div>
-            {isDownloading ? 'Generating PDF…' : 'Download PDF'}
-          </button>
-
-          <button
-            onClick={handleShare}
-            id="share-link-btn"
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium text-sm"
-          >
-            <AnimatePresence mode="wait">
-              {showCopied ? (
-                <motion.span key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                  <Check size={16} className="text-green-600" />
-                </motion.span>
-              ) : (
-                <motion.span key="share" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                  <Share2 size={16} />
-                </motion.span>
-              )}
-            </AnimatePresence>
-            {showCopied ? 'Copied!' : 'Share'}
-          </button>
-
-          {/* Zoom */}
-          <div className="flex items-center gap-1 border border-gray-200 rounded-xl overflow-hidden">
-            <button onClick={zoomOut} className="px-2 py-2.5 hover:bg-gray-100 transition-colors text-gray-600" title="Zoom out">
-              <ZoomOut size={14} />
+              <motion.div
+                animate={isDownloading ? { rotate: 360 } : { rotate: 0 }}
+                transition={{ duration: 1, repeat: isDownloading ? Infinity : 0, ease: 'linear' }}
+              >
+                <Download size={16} />
+              </motion.div>
+              {isDownloading ? 'Generating PDF…' : 'Download PDF'}
             </button>
-            <span className="text-xs text-gray-500 px-1 tabular-nums w-10 text-center">{Math.round(zoom * 100)}%</span>
-            <button onClick={zoomIn} className="px-2 py-2.5 hover:bg-gray-100 transition-colors text-gray-600" title="Zoom in">
-              <ZoomIn size={14} />
+
+            <button
+              onClick={handleShare}
+              id="share-link-btn"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium text-sm"
+            >
+              <AnimatePresence mode="wait">
+                {showCopied ? (
+                  <motion.span key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                    <Check size={16} className="text-green-600" />
+                  </motion.span>
+                ) : (
+                  <motion.span key="share" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                    <Share2 size={16} />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+              {showCopied ? 'Copied!' : 'Share'}
             </button>
+
+            {/* Zoom */}
+            <div className="flex items-center gap-1 border border-gray-200 rounded-xl overflow-hidden">
+              <button onClick={zoomOut} className="px-2 py-2.5 hover:bg-gray-100 transition-colors text-gray-600" title="Zoom out">
+                <ZoomOut size={14} />
+              </button>
+              <span className="text-xs text-gray-500 px-1 tabular-nums w-10 text-center">{Math.round(zoom * 100)}%</span>
+              <button onClick={zoomIn} className="px-2 py-2.5 hover:bg-gray-100 transition-colors text-gray-600" title="Zoom in">
+                <ZoomIn size={14} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Resume Preview Canvas */}
-      <div className="bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl overflow-auto flex-1"
-        style={{ minHeight: '600px', maxHeight: 'calc(100vh - 320px)' }}>
+      <div className="bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl overflow-auto flex-1 relative"
+        style={{ minHeight: hideActionBar ? '500px' : '600px' }}>
         <div className="flex justify-center py-8 px-4">
           <div
             style={{
