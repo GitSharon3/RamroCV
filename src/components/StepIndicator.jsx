@@ -1,14 +1,16 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import { useResumeStore } from '../store/resumeStore';
+import { useNavigate } from 'react-router-dom';
 
 const StepIndicator = () => {
-  const { wizardStep, setWizardStep } = useResumeStore();
+  const { wizardStep } = useResumeStore();
+  const navigate = useNavigate();
 
   const steps = [
-    { id: 1, name: 'Choose template' },
-    { id: 2, name: 'Enter your details' },
-    { id: 3, name: 'Download resume' },
+    { id: 1, name: 'Choose template', path: '/builder/choose' },
+    { id: 2, name: 'Enter your details', path: '/builder/details' },
+    { id: 3, name: 'Download resume', path: '/builder/download' },
   ];
 
   return (
@@ -21,7 +23,7 @@ const StepIndicator = () => {
           return (
             <React.Fragment key={step.id}>
               <button
-                onClick={() => isCompleted && setWizardStep(step.id)}
+                onClick={() => (isCompleted || isActive) && navigate(step.path)}
                 className="flex items-center gap-2 group outline-none"
                 disabled={!isCompleted && !isActive}
               >

@@ -1,17 +1,26 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Mail, Phone, MapPin, Globe } from 'lucide-react';
+import './template.css';
+import { ADDITIONAL_SECTION_LABELS } from '../constants/AdditionalSectionConstants';
 
-const Celestial = ({ personalInfo, education, experience, skills, projects, hobbies, sectionOrder }) => {
-  const { firstName, lastName, title, summary, email, phone, address, city, state, zip, country, website } = personalInfo;
+/**
+ * Celestial Template
+ * Features: Soft neutral tones, serif typography, elegant two-column layout.
+ * Best for: Premium, modern look applications.
+ */
+const Celestial = memo(({ personalInfo, education, experience, skills, projects, additionalSections }) => {
+  const { firstName, lastName, title, summary, email, phone, address, city, country, socialLinks = [] } = personalInfo;
+
+  const fontFamily = "'Playfair Display', serif";
 
   return (
-    <div className="flex bg-white min-h-[297mm] font-pt-serif overflow-hidden shadow-lg border border-gray-200">
+    <div className="flex bg-white min-h-[297mm] overflow-hidden" style={{ fontFamily }}>
       {/* ─── Left Sidebar (Refined Beige Tone) ─── */}
       <aside className="w-[32%] bg-[#f7f5f0] p-10 flex flex-col gap-10 border-r border-[#e8e4d8]">
         {/* Name & Title */}
         <div className="space-y-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-black text-gray-900 leading-tight uppercase tracking-tight font-playfair">
+            <h1 className="text-3xl font-black text-gray-900 leading-tight uppercase tracking-tight">
               {firstName} <br />
               <span className="text-[#8c7e6a]">{lastName}</span>
             </h1>
@@ -24,7 +33,7 @@ const Celestial = ({ personalInfo, education, experience, skills, projects, hobb
 
         {/* Contact Details */}
         <div className="space-y-6">
-          <h2 className="text-xs font-black text-[#8c7e6a] uppercase tracking-[0.2em] border-b border-[#e8e4d8] pb-2 font-sans text-left w-full">
+          <h2 className="text-xs font-black text-[#8c7e6a] uppercase tracking-[0.2em] border-b border-[#e8e4d8] pb-2 font-sans">
             Details
           </h2>
           <div className="space-y-4 text-[11px] text-gray-700 font-sans leading-relaxed">
@@ -33,7 +42,7 @@ const Celestial = ({ personalInfo, education, experience, skills, projects, hobb
                 <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center border border-[#e8e4d8] flex-shrink-0">
                   <Mail size={12} className="text-[#8c7e6a]" />
                 </div>
-                <span className="break-all">{email}</span>
+                <span className="resume-break-all">{email}</span>
               </div>
             )}
             {phone && (
@@ -50,27 +59,43 @@ const Celestial = ({ personalInfo, education, experience, skills, projects, hobb
                   <MapPin size={12} className="text-[#8c7e6a]" />
                 </div>
                 <span>
-                  {address}<br />
-                  {city}, {state} {zip}<br />
-                  {country}
+                  {address}{address ? <br /> : ''}
+                  {city}{city && country ? ', ' : ''}{country}
                 </span>
               </div>
             )}
-            {website && (
-              <div className="flex items-center gap-3">
+            {socialLinks.map((link, idx) => (
+              <div key={idx} className="flex items-center gap-3">
                 <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center border border-[#e8e4d8] flex-shrink-0">
                   <Globe size={12} className="text-[#8c7e6a]" />
                 </div>
-                <span>{website}</span>
+                <span className="resume-break-all">{link.url}</span>
               </div>
-            )}
+            ))}
           </div>
         </div>
+
+        {/* Additional Sections (Sidebar) */}
+        {additionalSections && Object.entries(additionalSections).map(([key, items]) => {
+          if (!items || items.length === 0) return null;
+          return (
+            <div key={key} className="space-y-6">
+              <h2 className="text-xs font-black text-[#8c7e6a] uppercase tracking-[0.2em] border-b border-[#e8e4d8] pb-2 font-sans text-left w-full">
+                {ADDITIONAL_SECTION_LABELS[key] || key}
+              </h2>
+              <ul className="space-y-2 text-[11px] text-gray-700 font-sans leading-relaxed">
+                {items.map(item => (
+                  <li key={item.id} className="font-bold">{item.name}</li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
 
         {/* Skills */}
         {skills && skills.length > 0 && (
           <div className="space-y-6">
-            <h2 className="text-xs font-black text-[#8c7e6a] uppercase tracking-[0.2em] border-b border-[#e8e4d8] pb-2 font-sans text-left w-full">
+            <h2 className="text-xs font-black text-[#8c7e6a] uppercase tracking-[0.2em] border-b border-[#e8e4d8] pb-2 font-sans">
               Expertise
             </h2>
             <div className="space-y-4">
@@ -80,8 +105,8 @@ const Celestial = ({ personalInfo, education, experience, skills, projects, hobb
                     <span>{skill.name}</span>
                   </div>
                   <div className="h-0.5 w-full bg-white">
-                    <div 
-                      className="h-full bg-[#8c7e6a]" 
+                    <div
+                      className="h-full bg-[#8c7e6a]"
                       style={{ width: skill.level === 'Expert' ? '100%' : skill.level === 'Advanced' ? '80%' : skill.level === 'Intermediate' ? '60%' : '40%' }}
                     />
                   </div>
@@ -98,12 +123,12 @@ const Celestial = ({ personalInfo, education, experience, skills, projects, hobb
         {summary && (
           <div className="space-y-5">
             <div className="flex items-center gap-4">
-              <h2 className="text-lg font-black text-gray-900 uppercase tracking-[0.1em] font-playfair">
+              <h2 className="text-lg font-black text-gray-900 uppercase tracking-[0.1em]">
                 Profile
               </h2>
               <div className="h-px flex-1 bg-gray-100" />
             </div>
-            <p className="text-[13px] text-gray-600 leading-relaxed font-pt-serif italic text-justify">
+            <p className="text-[13px] text-gray-600 leading-relaxed italic text-justify">
               {summary}
             </p>
           </div>
@@ -113,7 +138,7 @@ const Celestial = ({ personalInfo, education, experience, skills, projects, hobb
         {experience && experience.length > 0 && (
           <div className="space-y-8">
             <div className="flex items-center gap-4">
-              <h2 className="text-lg font-black text-gray-900 uppercase tracking-[0.1em] font-playfair flex-shrink-0">
+              <h2 className="text-lg font-black text-gray-900 uppercase tracking-[0.1em] flex-shrink-0">
                 Experience
               </h2>
               <div className="h-px flex-1 bg-gray-100" />
@@ -121,19 +146,19 @@ const Celestial = ({ personalInfo, education, experience, skills, projects, hobb
             <div className="space-y-10">
               {experience.map((exp) => (
                 <div key={exp.id} className="space-y-3 relative group">
-                  <div className="flex justify-between items-baseline">
+                  <div className="resume-flex-between">
                     <h3 className="text-base font-black text-gray-800 font-sans tracking-tight">
                       {exp.position}
                     </h3>
                     <span className="text-[11px] font-bold text-[#8c7e6a] uppercase tracking-wider font-sans whitespace-nowrap ml-4">
-                      {exp.startDate} — {exp.endDate}
+                      {exp.startDate} — {exp.endDate || 'Present'}
                     </span>
                   </div>
-                  <div className="text-[12px] font-bold text-gray-500 uppercase tracking-widest font-sans flex items-center justify-between">
+                  <div className="text-[12px] font-bold text-gray-500 uppercase tracking-widest font-sans flex justify-between items-center">
                     <span>{exp.company}</span>
                     <span className="text-[10px] lowercase italic font-normal text-gray-400 font-serif">{exp.location}</span>
                   </div>
-                  <div className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-line font-pt-serif pr-4">
+                  <div className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-line pr-4">
                     {exp.description}
                   </div>
                 </div>
@@ -146,7 +171,7 @@ const Celestial = ({ personalInfo, education, experience, skills, projects, hobb
         {education && education.length > 0 && (
           <div className="space-y-8">
             <div className="flex items-center gap-4">
-              <h2 className="text-lg font-black text-gray-900 uppercase tracking-[0.1em] font-playfair flex-shrink-0">
+              <h2 className="text-lg font-black text-gray-900 uppercase tracking-[0.1em] flex-shrink-0">
                 Education
               </h2>
               <div className="h-px flex-1 bg-gray-100" />
@@ -154,12 +179,12 @@ const Celestial = ({ personalInfo, education, experience, skills, projects, hobb
             <div className="space-y-8">
               {education.map((edu) => (
                 <div key={edu.id} className="space-y-2">
-                  <div className="flex justify-between items-baseline">
+                  <div className="resume-flex-between">
                     <h3 className="text-base font-black text-gray-800 font-sans tracking-tight">
-                       {edu.degree} {edu.field ? `in ${edu.field}` : ''}
+                      {edu.degree} {edu.field ? `in ${edu.field}` : ''}
                     </h3>
-                     <span className="text-[11px] font-bold text-[#8c7e6a] uppercase tracking-wider font-sans whitespace-nowrap ml-4">
-                      {edu.startDate} — {edu.endDate}
+                    <span className="text-[11px] font-bold text-[#8c7e6a] uppercase tracking-wider font-sans whitespace-nowrap ml-4">
+                      {edu.startDate} — {edu.endDate || 'Present'}
                     </span>
                   </div>
                   <div className="text-[12px] font-bold text-gray-500 uppercase tracking-widest font-sans">
@@ -173,6 +198,6 @@ const Celestial = ({ personalInfo, education, experience, skills, projects, hobb
       </main>
     </div>
   );
-};
+});
 
 export default Celestial;

@@ -13,12 +13,12 @@ import Nova from '../templates/Nova';
 import TemplateSwitcher from './TemplateSwitcher';
 
 const ResumePreview = ({ hideTemplateSwitcher, initialZoom = 0.75 }) => {
-  const { activeTemplate, sectionOrder, personalInfo, education, experience, skills, projects, hobbies } = useResumeStore();
+  const { activeTemplate, sectionOrder, personalInfo, education, experience, skills, projects, additionalSections } = useResumeStore();
   const [showCopied, setShowCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [zoom, setZoom] = useState(initialZoom);
 
-  const resumeData = { personalInfo, education, experience, skills, projects, hobbies, sectionOrder };
+  const resumeData = { personalInfo, education, experience, skills, projects, additionalSections, sectionOrder };
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -32,7 +32,7 @@ const ResumePreview = ({ hideTemplateSwitcher, initialZoom = 0.75 }) => {
   };
 
   const handleShare = async () => {
-    const link = generateShareableLink({ personalInfo, education, experience, skills, projects, hobbies, activeTemplate });
+    const link = generateShareableLink({ personalInfo, education, experience, skills, projects, additionalSections, activeTemplate });
     try {
       await navigator.clipboard.writeText(link);
       setShowCopied(true);

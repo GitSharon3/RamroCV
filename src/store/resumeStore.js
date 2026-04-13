@@ -12,15 +12,11 @@ export const useResumeStore = create(
         phone: '',
         address: '',
         city: '',
-        state: '',
-        zip: '',
         country: '',
         title: '',
         summary: '',
-        website: '',
-        linkedin: '',
-        github: '',
-        photo: null, // base64 image
+        socialLinks: [{ platform: 'LinkedIn', url: '' }],
+        photo: null, 
         showPhoto: true,
       },
 
@@ -28,18 +24,54 @@ export const useResumeStore = create(
       experience: [],
       skills: [],
       projects: [],
-      hobbies: [],
+      additionalSections: {
+        languages: [],
+        certifications: [],
+        awards: [],
+        websites: [],
+        references: [],
+        hobbies: [],
+        custom: []
+      },
 
       // UI State
       wizardStep: 1, // 1: Choose Template, 2: Enter Details, 3: Download
       activeTemplate: 'celestial',
-      sectionOrder: ['personalInfo', 'experience', 'education', 'skills', 'projects', 'hobbies'],
+      sectionOrder: ['personalInfo', 'summary', 'experience', 'education', 'skills', 'projects', 'additional'],
 
       // Actions
       updatePersonalInfo: (field, value) =>
         set((state) => ({
           personalInfo: { ...state.personalInfo, [field]: value },
         })),
+
+      addSocialLink: () =>
+        set((state) => {
+          if (state.personalInfo.socialLinks.length >= 3) return state;
+          return {
+            personalInfo: {
+              ...state.personalInfo,
+              socialLinks: [...state.personalInfo.socialLinks, { platform: 'LinkedIn', url: '' }],
+            },
+          };
+        }),
+
+      removeSocialLink: (index) =>
+        set((state) => ({
+          personalInfo: {
+            ...state.personalInfo,
+            socialLinks: state.personalInfo.socialLinks.filter((_, i) => i !== index),
+          },
+        })),
+
+      updateSocialLink: (index, field, value) =>
+        set((state) => {
+          const newLinks = [...state.personalInfo.socialLinks];
+          newLinks[index] = { ...newLinks[index], [field]: value };
+          return {
+            personalInfo: { ...state.personalInfo, socialLinks: newLinks },
+          };
+        }),
 
       setPhoto: (base64) =>
         set((state) => ({
@@ -119,14 +151,30 @@ export const useResumeStore = create(
           projects: state.projects.filter((proj) => proj.id !== id),
         })),
 
-      addHobby: (hobby) =>
+      addAdditionalItem: (section, item) =>
         set((state) => ({
-          hobbies: [...state.hobbies, { ...hobby, id: Date.now() }],
+          additionalSections: {
+            ...state.additionalSections,
+            [section]: [...state.additionalSections[section], { ...item, id: Date.now() }]
+          }
         })),
 
-      removeHobby: (id) =>
+      updateAdditionalItem: (section, id, field, value) =>
         set((state) => ({
-          hobbies: state.hobbies.filter((hobby) => hobby.id !== id),
+          additionalSections: {
+            ...state.additionalSections,
+            [section]: state.additionalSections[section].map((item) =>
+              item.id === id ? { ...item, [field]: value } : item
+            )
+          }
+        })),
+
+      removeAdditionalItem: (section, id) =>
+        set((state) => ({
+          additionalSections: {
+            ...state.additionalSections,
+            [section]: state.additionalSections[section].filter((item) => item.id !== id)
+          }
         })),
 
       setActiveTemplate: (template) => set({ activeTemplate: template }),
@@ -134,6 +182,16 @@ export const useResumeStore = create(
       setWizardStep: (step) => set({ wizardStep: step }),
 
       reorderSections: (newOrder) => set({ sectionOrder: newOrder }),
+
+      // Sync sections to ensure missing ones are added
+      syncSectionOrder: () => {
+        const required = ['personalInfo', 'summary', 'experience', 'education', 'skills', 'projects', 'additional'];
+        set((state) => {
+          const missing = required.filter(s => !state.sectionOrder.includes(s));
+          if (missing.length === 0) return state;
+          return { sectionOrder: [...state.sectionOrder, ...missing] };
+        });
+      },
 
       // Load parsed latex data into store
       loadParsedData: (parsed) => {
@@ -158,14 +216,14 @@ export const useResumeStore = create(
             phone: '+1 (555) 987-6543',
             address: '456 Oak Avenue',
             city: 'San Francisco',
-            state: 'CA',
-            zip: '94102',
             country: 'USA',
             title: 'Senior Software Engineer',
             summary: 'Results-driven software engineer with 6+ years of experience building scalable web and mobile applications. Proven track record of delivering high-quality solutions that drive business growth. Expert in React, Node.js, and cloud-native architectures.',
-            website: 'alexjohnson.dev',
-            linkedin: 'linkedin.com/in/alexjohnson',
-            github: 'github.com/alexjohnson',
+            socialLinks: [
+              { platform: 'LinkedIn', url: 'linkedin.com/in/alexjohnson' },
+              { platform: 'GitHub', url: 'github.com/alexjohnson' },
+              { platform: 'Website', url: 'alexjohnson.dev' }
+            ],
             photo: null,
             showPhoto: true,
           },
@@ -236,12 +294,19 @@ export const useResumeStore = create(
               link: 'devmetrics.io',
             },
           ],
-          hobbies: [
-            { id: 1, name: 'Open Source Contributing' },
-            { id: 2, name: 'Rock Climbing' },
-            { id: 3, name: 'Photography' },
-            { id: 4, name: 'Technical Blogging' },
-          ],
+          additionalSections: {
+            languages: [{ id: 1, name: 'English - Native' }, { id: 2, name: 'Spanish - Fluent' }],
+            certifications: [{ id: 1, name: 'AWS Certified Solutions Architect' }],
+            awards: [],
+            websites: [{ id: 1, name: 'GitHub - github.com/alexjohnson' }, { id: 2, name: 'Portfolio - alexjohnson.dev' }],
+            references: [],
+            hobbies: [
+              { id: 1, name: 'Open Source Contributing' },
+              { id: 2, name: 'Rock Climbing' },
+              { id: 3, name: 'Photography' }
+            ],
+            custom: []
+          },
         });
       },
 
@@ -254,14 +319,10 @@ export const useResumeStore = create(
             phone: '',
             address: '',
             city: '',
-            state: '',
-            zip: '',
             country: '',
             title: '',
             summary: '',
-            website: '',
-            linkedin: '',
-            github: '',
+            socialLinks: [{ platform: 'LinkedIn', url: '' }],
             photo: null,
             showPhoto: true,
           },
@@ -269,7 +330,15 @@ export const useResumeStore = create(
           experience: [],
           skills: [],
           projects: [],
-          hobbies: [],
+          additionalSections: {
+            languages: [],
+            certifications: [],
+            awards: [],
+            websites: [],
+            references: [],
+            hobbies: [],
+            custom: []
+          },
         });
       },
     }),

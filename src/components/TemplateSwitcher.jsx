@@ -40,7 +40,7 @@ const templates = [
     gradient: 'from-indigo-100 to-white',
     badge: 'Classic',
     badgeColor: 'bg-indigo-100 text-indigo-800',
-    image: temp3,
+    image: temp4,
   },
   {
     id: 'lumina',
@@ -50,7 +50,7 @@ const templates = [
     gradient: 'from-orange-50 to-orange-100',
     badge: 'Photo',
     badgeColor: 'bg-orange-100 text-orange-800',
-    image: temp4,
+    image: temp3,
   },
   {
     id: 'zenith',

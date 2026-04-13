@@ -1,96 +1,112 @@
-import React from 'react';
+import React, { memo } from 'react';
+import './template.css';
+import { ADDITIONAL_SECTION_LABELS } from '../constants/AdditionalSectionConstants';
 
-const Lumina = ({ personalInfo, education, experience, skills, projects }) => {
+/**
+ * Lumina Template
+ * Features: Modern asymmetric two-column design with a distinct sidebar.
+ * Best for: Highlighting skills and contact info alongside professional experience.
+ */
+const Lumina = memo(({ personalInfo, education, experience, skills, projects, additionalSections }) => {
   const fontFamily = "'Times New Roman', Times, serif";
-  
+
   const SectionHeader = ({ title }) => (
-    <h2 className="uppercase font-bold text-[14px] tracking-wider mb-3 border-b-[1.5px] border-black pb-1">
+    <h2 className="uppercase font-bold text-[13px] tracking-widest mb-3 border-b-[1.5px] border-black pb-1">
       {title}
     </h2>
   );
 
   return (
-    <div className="w-full h-full flex justify-center bg-[#f8f9fb]">
-      <div className="bg-white w-full h-full min-h-[297mm] text-[#1a1a1a] shadow-sm max-w-[210mm]" style={{ fontFamily }}>
-        {/* Top Banner */}
-        <div className="bg-[#e9dfd4] px-10 py-8 flex items-center gap-8">
-          {personalInfo?.showPhoto && personalInfo?.photo ? (
-            <div className="w-32 h-32 flex-shrink-0">
-              <img src={personalInfo.photo} alt="Profile" className="w-full h-full object-cover shadow-sm border-2 border-[#e9dfd4]" />
-            </div>
-          ) : (
-            personalInfo?.showPhoto && (
-              <div className="w-32 h-32 flex-shrink-0 bg-gray-300 opacity-50 flex items-center justify-center text-xs text-gray-500">
-                Photo
-              </div>
-            )
-          )}
-          <div className="flex-1 flex flex-col justify-center">
-            <h1 className="text-[34px] font-bold mb-1 text-gray-900 leading-tight">
-              {personalInfo?.firstName} {personalInfo?.lastName}
+    <div className="resume-page-wrapper">
+      <div className="resume-a4-canvas flex" style={{ fontFamily }}>
+
+        {/* Left Sidebar - Information & Skills */}
+        <aside className="w-[32%] bg-[#1a1a1a] text-white pt-16 pb-10 px-8 flex flex-col gap-10">
+          {/* Photo handling if existed else compact info */}
+          <div className="flex flex-col gap-3">
+            <h1 className="text-2xl font-black uppercase tracking-tighter leading-none border-b border-gray-700 pb-3 italic">
+              {personalInfo?.firstName}<br />{personalInfo?.lastName}
             </h1>
-            {personalInfo?.title && <h2 className="text-[16px] font-bold mb-3 text-gray-800 tracking-wide">{personalInfo.title}</h2>}
-            <div className="space-y-1 text-[13px] text-gray-800">
-              <div>
-                {[personalInfo?.address, personalInfo?.city, personalInfo?.state, personalInfo?.zip]
+            <div className="space-y-2 text-[11px] text-gray-300 font-medium tracking-wide">
+              <p className="resume-break-all">{personalInfo?.email}</p>
+              <p>{personalInfo?.phone}</p>
+              <p className="opacity-70 mt-4 leading-relaxed">
+                {[personalInfo?.address, personalInfo?.city, personalInfo?.country]
                   .filter(Boolean).join(', ')}
+              </p>
+              <div className="pt-2 space-y-1">
+                {(personalInfo?.socialLinks || []).map((link, idx) => (
+                  <p key={idx} className="resume-break-all text-blue-400 opacity-90">{link.url}</p>
+                ))}
               </div>
-              <div>{personalInfo?.email}</div>
-              <div>{personalInfo?.phone}</div>
             </div>
           </div>
-        </div>
 
-        {/* Main Content Grid */}
-        <div className="flex px-10 pt-8 pb-10 gap-8 h-full">
-          {/* Left Column */}
-          <div className="w-[32%] flex flex-col gap-6">
+          {/* Hard Skills */}
+          {skills && skills.length > 0 && (
+            <div className="flex flex-col gap-4">
+              <h2 className="uppercase font-bold text-[12px] tracking-widest border-b border-gray-700 pb-1 text-gray-400">Skills</h2>
+              <ul className="space-y-1.5 text-[12px]">
+                {skills.map((skill, idx) => (
+                  <li key={idx} className="font-medium tracking-tight">• {skill.name}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Sidebar Additional Sections */}
+          {additionalSections && Object.entries(additionalSections).map(([key, items]) => {
+            if (!items || items.length === 0) return null;
+            return (
+              <div key={key} className="flex flex-col gap-4">
+                <h2 className="uppercase font-bold text-[12px] tracking-widest border-b border-gray-700 pb-1 text-gray-400">
+                  {ADDITIONAL_SECTION_LABELS[key] || key}
+                </h2>
+                <ul className="space-y-1.5 text-[12px]">
+                  {items.map(item => (
+                    <li key={item.id} className="font-medium opacity-90 leading-tight">› {item.name}</li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </aside>
+
+        {/* Right Content - Main Narrative */}
+        <main className="w-[68%] p-12 bg-white">
+          <div className="flex flex-col gap-10">
+            {/* Summary */}
             {personalInfo?.summary && (
               <div>
-                <SectionHeader title="Summary" />
-                <p className="text-[13px] leading-relaxed text-justify">
+                <SectionHeader title="Profile" />
+                <p className="text-[13px] leading-relaxed text-gray-800 text-justify">
                   {personalInfo.summary}
                 </p>
               </div>
             )}
 
-            {skills && skills.length > 0 && (
-              <div>
-                <SectionHeader title="Skills" />
-                <ul className="space-y-1.5 mt-2 text-[13px] list-disc pl-4">
-                  {skills.map((skill, idx) => (
-                    <li key={idx}>
-                       <span className="font-medium">{skill.name}</span>
-                       {skill.level && <span className="italic text-gray-600"> - {skill.level}</span>}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          {/* Vertical divider */}
-          <div className="w-[1px] bg-gray-200"></div>
-
-          {/* Right Column */}
-          <div className="w-[64%] flex flex-col gap-6">
+            {/* Experience */}
             {experience && experience.length > 0 && (
               <div>
                 <SectionHeader title="Experience" />
-                <div className="space-y-5 text-[13px] mt-2">
+                <div className="space-y-6">
                   {experience.map((exp, idx) => (
                     <div key={idx}>
-                      <div className="flex justify-between items-baseline mb-0.5">
-                        <span className="font-bold italic text-[14px]">{exp.position}</span>
-                        <span className="font-bold italic text-sm text-gray-700 whitespace-nowrap">{exp.startDate} — {exp.endDate || 'Current'}</span>
+                      <div className="resume-flex-between">
+                        <span className="font-black text-[14px] text-gray-900 uppercase">
+                          {exp.position}
+                        </span>
+                        <span className="text-gray-500 text-[11px] font-bold">
+                          {exp.startDate} — {exp.endDate || 'Present'}
+                        </span>
                       </div>
-                      <div className="mb-2 text-gray-800">
-                        {exp.company}{exp.location ? ` - ${exp.location}` : ''}
+                      <div className="mb-3 text-gray-600 font-bold text-[12px] italic">
+                        {exp.company}{exp.location ? ` | ${exp.location}` : ''}
                       </div>
                       {exp.description && (
-                        <ul className="list-disc pl-4 space-y-1 mt-1.5">
+                        <ul className="resume-list pl-4">
                           {exp.description.split('\n').filter(l => l.trim()).map((line, i) => (
-                            <li key={i}>{line.replace(/^[•*-]\s*/, '')}</li>
+                            <li key={i} className="resume-list-item">{line.replace(/^[•*-]\s*/, '')}</li>
                           ))}
                         </ul>
                       )}
@@ -100,18 +116,22 @@ const Lumina = ({ personalInfo, education, experience, skills, projects }) => {
               </div>
             )}
 
+            {/* Education */}
             {education && education.length > 0 && (
               <div>
                 <SectionHeader title="Education" />
-                <div className="space-y-4 text-[13px] mt-2">
+                <div className="space-y-5">
                   {education.map((edu, idx) => (
                     <div key={idx}>
-                      <div className="flex justify-between items-baseline font-bold mb-1 italic">
-                        <span className="text-[14px] font-bold non-italic">{edu.school}</span>
-                        <span className="font-bold whitespace-nowrap">{edu.startDate} — {edu.endDate || 'Current'}</span>
+                      <div className="resume-flex-between">
+                        <span className="font-black text-[13px] text-gray-900 uppercase">
+                          {edu.school}
+                        </span>
+                        <span className="text-gray-500 text-[11px] font-bold">
+                          {edu.startDate} — {edu.endDate || 'Present'}
+                        </span>
                       </div>
-                      <div className="text-gray-800">
-                        {edu.location ? `${edu.location} | ` : ''}
+                      <div className="text-gray-600 text-[12px] font-medium italic">
                         {edu.degree}{edu.field ? ` in ${edu.field}` : ''}
                       </div>
                     </div>
@@ -120,18 +140,23 @@ const Lumina = ({ personalInfo, education, experience, skills, projects }) => {
               </div>
             )}
 
+            {/* Projects */}
             {projects && projects.length > 0 && (
               <div>
                 <SectionHeader title="Projects" />
-                <div className="space-y-4 text-[13px] mt-2">
+                <div className="space-y-5">
                   {projects.map((proj, idx) => (
                     <div key={idx}>
-                      <div className="flex justify-between items-baseline mb-1">
-                        <span className="font-bold text-[14px]">{proj.name}</span>
+                      <div className="font-black text-[13px] text-gray-900 uppercase mb-1">
+                        {proj.name}
                       </div>
-                      {proj.technologies && <div className="italic text-xs mb-1 text-gray-600">{proj.technologies}</div>}
+                      <div className="text-blue-900 text-[11px] font-bold mb-2 opacity-70 tracking-tighter">
+                        {proj.technologies}
+                      </div>
                       {proj.description && (
-                         <p className="leading-relaxed mt-1">{proj.description}</p>
+                        <p className="text-[12px] leading-relaxed text-gray-700 italic border-l-2 border-gray-100 pl-3">
+                          {proj.description}
+                        </p>
                       )}
                     </div>
                   ))}
@@ -139,9 +164,11 @@ const Lumina = ({ personalInfo, education, experience, skills, projects }) => {
               </div>
             )}
           </div>
-        </div>
+        </main>
+
       </div>
     </div>
   );
-};
+});
+
 export default Lumina;

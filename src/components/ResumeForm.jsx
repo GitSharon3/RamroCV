@@ -1,26 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, GripVertical, Code2, User, Briefcase, GraduationCap, Wrench, FolderOpen, Heart, Image, ArrowRight } from 'lucide-react';
+import { ChevronDown, GripVertical, Code2, User, Briefcase, GraduationCap, Wrench, FolderOpen, PlusCircle, FileText, ArrowRight } from 'lucide-react';
 import { useResumeStore } from '../store/resumeStore';
 import PersonalInfo from './PersonalInfo';
 import WorkExperience from './WorkExperience';
 import Education from './Education';
 import Skills from './Skills';
 import Projects from './Projects';
-import Hobbies from './Hobbies';
+import ProfessionalSummary from './ProfessionalSummary';
+import AdditionalSections from './AdditionalSections';
 import LatexImporter from './LatexImporter';
 
 const sections = {
   personalInfo: { component: PersonalInfo, label: 'Personal Information', icon: User, color: 'blue' },
+  summary: { component: ProfessionalSummary, label: 'Professional Summary', icon: FileText, color: 'cyan' },
   experience: { component: WorkExperience, label: 'Work Experience', icon: Briefcase, color: 'indigo' },
   education: { component: Education, label: 'Education', icon: GraduationCap, color: 'emerald' },
   skills: { component: Skills, label: 'Skills', icon: Wrench, color: 'violet' },
   projects: { component: Projects, label: 'Projects', icon: FolderOpen, color: 'amber' },
-  hobbies: { component: Hobbies, label: 'Hobbies & Interests', icon: Heart, color: 'rose' },
+  additional: { component: AdditionalSections, label: 'Additional Sections', icon: PlusCircle, color: 'rose' },
 };
 
 const colorMap = {
   blue: { border: 'border-l-blue-500', bg: 'bg-blue-50/40', icon: 'text-blue-600', badge: 'bg-blue-100 text-blue-700' },
+  cyan: { border: 'border-l-cyan-500', bg: 'bg-cyan-50/40', icon: 'text-cyan-600', badge: 'bg-cyan-100 text-cyan-700' },
   indigo: { border: 'border-l-indigo-500', bg: 'bg-indigo-50/40', icon: 'text-indigo-600', badge: 'bg-indigo-100 text-indigo-700' },
   emerald: { border: 'border-l-emerald-500', bg: 'bg-emerald-50/40', icon: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-700' },
   violet: { border: 'border-l-violet-500', bg: 'bg-violet-50/40', icon: 'text-violet-600', badge: 'bg-violet-100 text-violet-700' },
@@ -32,10 +36,15 @@ const TAB_EDIT = 'edit';
 const TAB_LATEX = 'latex';
 
 const ResumeForm = () => {
-  const { sectionOrder, reorderSections, setWizardStep } = useResumeStore();
+  const { sectionOrder, reorderSections, syncSectionOrder } = useResumeStore();
+  const navigate = useNavigate();
   const [expandedSections, setExpandedSections] = useState(['personalInfo']);
   const [draggedSection, setDraggedSection] = useState(null);
   const [activeTab, setActiveTab] = useState(TAB_EDIT);
+
+  useEffect(() => {
+    syncSectionOrder();
+  }, []);
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) =>
@@ -169,7 +178,7 @@ const ResumeForm = () => {
             exit={{ opacity: 0, x: -10 }}
             className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5"
           >
-            <LatexImporter onImported={() => setActiveTab(TAB_EDIT)} />
+            <LatexImporter onImported={() => navigate('/builder/details')} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -178,7 +187,7 @@ const ResumeForm = () => {
       {activeTab === TAB_EDIT && (
         <div className="pt-4 mt-2">
           <button
-            onClick={() => setWizardStep(3)}
+            onClick={() => navigate('/builder/download')}
             className="w-full py-4 bg-sky-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm shadow-sky-200 hover:bg-sky-600 transition-all text-sm uppercase tracking-wider"
           >
             Review & Download Resume

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useResumeStore } from '../store/resumeStore';
-import { User, Mail, Phone, MapPin, Link, FileText, Sparkles, Trash2 } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Link, FileText, Sparkles, Trash2, Plus, X, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImageUploader from './ImageUploader';
 
 const PersonalInfo = () => {
-  const { personalInfo, updatePersonalInfo, loadSampleData, clearAllData } = useResumeStore();
+  const { personalInfo, updatePersonalInfo, loadSampleData, clearAllData, addSocialLink, removeSocialLink, updateSocialLink } = useResumeStore();
   const [showTooltip, setShowTooltip] = useState(null);
 
   const fields = [
@@ -15,12 +15,7 @@ const PersonalInfo = () => {
     { name: 'email', label: 'Email', icon: Mail, placeholder: 'jane@example.com', col: 1 },
     { name: 'phone', label: 'Phone', icon: Phone, placeholder: '+1 (555) 000-1234', col: 1 },
     { name: 'city', label: 'City', icon: MapPin, placeholder: 'San Francisco', col: 1 },
-    { name: 'state', label: 'State / Province', icon: MapPin, placeholder: 'CA', col: 1 },
     { name: 'country', label: 'Country', icon: MapPin, placeholder: 'USA', col: 1 },
-    { name: 'zip', label: 'ZIP / Postal Code', icon: MapPin, placeholder: '94102', col: 1 },
-    { name: 'website', label: 'Website / Portfolio', icon: Link, placeholder: 'janesmith.dev', col: 1 },
-    { name: 'linkedin', label: 'LinkedIn', icon: Link, placeholder: 'linkedin.com/in/janesmith', col: 1 },
-    { name: 'github', label: 'GitHub', icon: Link, placeholder: 'github.com/janesmith', col: 1 },
   ];
 
   return (
@@ -76,22 +71,84 @@ const PersonalInfo = () => {
         ))}
       </div>
 
-      {/* Summary */}
-      <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-          Professional Summary
-        </label>
-        <textarea
-          value={personalInfo.summary || ''}
-          onChange={(e) => updatePersonalInfo('summary', e.target.value)}
-          placeholder="Brief 2-4 sentence overview of your professional background, key skills, and career goals..."
-          rows={4}
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none resize-none text-sm"
-        />
-        <p className="text-xs text-gray-400 mt-1">
-          💡 Tip: Lead with your years of experience, core expertise, and biggest achievement.
-        </p>
+      {/* Social Media Links */}
+      <div className="pt-4 space-y-4">
+        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+            <Link size={14} className="text-blue-500" />
+            Social Media (Max 3)
+          </label>
+          {(personalInfo.socialLinks || []).length < 3 && (
+            <button
+              onClick={addSocialLink}
+              className="flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors uppercase tracking-tight"
+            >
+              <Plus size={12} />
+              Add Platform
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          {(personalInfo.socialLinks || []).map((link, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="grid grid-cols-12 gap-3 items-end bg-gray-50/50 p-3 rounded-xl border border-gray-100 relative group"
+            >
+              <div className="col-span-5">
+                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-tighter">Platform</label>
+                <div className="relative">
+                  <select
+                    value={link.platform}
+                    onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
+                    className="w-full pl-3 pr-8 py-1.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-xs bg-white appearance-none transition-all"
+                  >
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Twitter">Twitter / X</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="GitHub">GitHub</option>
+                    <option value="Website">Portfolio</option>
+                    <option value="Threads">Threads</option>
+                    <option value="Behance">Behance</option>
+                    <option value="Dribbble">Dribbble</option>
+                  </select>
+                  <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+              <div className="col-span-6">
+                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-tighter">URL / Handle</label>
+                <input
+                  type="text"
+                  value={link.url}
+                  onChange={(e) => updateSocialLink(index, 'url', e.target.value)}
+                  placeholder="username or full link"
+                  className="w-full px-3 py-1.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-xs bg-white transition-all shadow-sm"
+                />
+              </div>
+              <div className="col-span-1 flex justify-end">
+                <button
+                  onClick={() => removeSocialLink(index)}
+                  className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                  title="Remove link"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+
+          {(personalInfo.socialLinks || []).length === 0 && (
+            <div className="text-center py-6 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/30">
+              <p className="text-[11px] text-gray-400 font-medium">No social links added yet</p>
+            </div>
+          )}
+        </div>
       </div>
+
+
     </div>
   );
 };

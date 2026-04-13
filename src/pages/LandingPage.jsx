@@ -26,14 +26,8 @@ const BRAND_COLOR = '#0ea5e9'; // sky-500
 const LandingPage = () => {
   const { setWizardStep, setActiveTemplate } = useResumeStore();
 
-  const handleStartBuilding = () => {
-    setWizardStep(1);
-  };
-
-  const handleSelectTemplate = (templateId) => {
-    setActiveTemplate(templateId);
-    setWizardStep(2);
-  };
+  // Removed handleStartBuilding as we handle via Link to /builder/choose
+  // Removed handleSelectTemplate as we handle via Link in templates section
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -49,7 +43,7 @@ const LandingPage = () => {
             </span>
           </Link>
           <Link
-            to="/builder"
+            to="/builder/choose"
             id="nav-build-btn"
             className="px-5 py-2 border-2 border-sky-500 text-sky-600 rounded-full text-sm font-bold hover:bg-sky-500 hover:text-white transition-all duration-200"
           >
@@ -101,18 +95,16 @@ const LandingPage = () => {
               {/* CTA Buttons */}
               <motion.div variants={fadeUp} custom={3} className="flex flex-wrap gap-3 pt-1">
                 <Link
-                  to="/builder"
+                  to="/builder/choose"
                   id="hero-cta-new"
-                  onClick={handleStartBuilding}
                   className="inline-flex items-center gap-2 px-7 py-3.5 bg-sky-500 text-white rounded-xl text-sm font-bold hover:bg-sky-600 shadow-lg shadow-sky-200 hover:shadow-xl hover:shadow-sky-300 transition-all duration-200"
                 >
                   Create a New Resume
                   <ArrowRight size={16} />
                 </Link>
                 <Link
-                  to="/builder"
+                  to="/builder/choose"
                   id="hero-cta-improve"
-                  onClick={handleStartBuilding}
                   className="inline-flex items-center gap-2 px-7 py-3.5 border-2 border-sky-200 text-sky-600 rounded-xl text-sm font-bold hover:bg-sky-50 transition-all duration-200"
                 >
                   Improve My Resume
@@ -378,11 +370,10 @@ const LandingPage = () => {
                     <button 
                       onClick={() => {
                         setActiveTemplate(tpl.id);
-                        setWizardStep(2);
                       }}
                     >
                       <Link 
-                        to="/builder" 
+                        to="/builder/details" 
                         className="inline-flex items-center gap-3 px-8 py-4 bg-sky-500 text-white font-bold rounded-2xl shadow-2xl shadow-sky-500/30 hover:bg-sky-600 hover:scale-105 active:scale-95 transition-all duration-300 translate-y-8 group-hover:translate-y-0"
                       >
                         <Sparkles size={18} className="animate-pulse" />

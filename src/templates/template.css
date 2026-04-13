@@ -1,0 +1,44 @@
+/* 
+  Global Resume Template Styles 
+  These classes provide consistency across different resume designs while allowing
+  specific customizations within the JS components.
+*/
+
+/* The primary background for the previewer area */
+.resume-page-wrapper {
+  @apply w-full h-full flex justify-center bg-[#f8f9fb];
+}
+
+/* The A4 canvas constraints and base styling */
+.resume-a4-canvas {
+  @apply bg-white w-full h-full min-h-[297mm] text-[#1a1a1a] shadow-sm max-w-[210mm] relative overflow-hidden;
+}
+
+/* Common list styling for experience/project bullets */
+.resume-list {
+  @apply list-disc pl-5 space-y-1 mt-1;
+}
+
+.resume-list-item {
+  @apply leading-relaxed text-[13px] text-gray-800;
+}
+
+/* Standardized spacing between sections */
+.resume-section-spacing {
+  @apply mb-6;
+}
+
+/* Contact info flex row/container */
+.resume-contact-info {
+  @apply flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-gray-800;
+}
+
+/* Break-all for long emails or URLs */
+.resume-break-all {
+  @apply break-all;
+}
+
+/* Flex group for dates or locations (justify-between pattern) */
+.resume-flex-between {
+  @apply flex justify-between items-baseline mb-0.5;
+}

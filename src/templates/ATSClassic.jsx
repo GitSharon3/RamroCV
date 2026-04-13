@@ -1,6 +1,13 @@
-import React from 'react';
+import React, { memo } from 'react';
+import './template.css';
+import { ADDITIONAL_SECTION_LABELS } from '../constants/AdditionalSectionConstants';
 
-const ATSClassic = ({ personalInfo, education, experience, skills, projects }) => {
+/**
+ * ATS Classic Template
+ * Features: High machine readability, standard sans-serif font, logical structure.
+ * Best for: Standard corporate applications and legacy portal uploads.
+ */
+const ATSClassic = memo(({ personalInfo, education, experience, skills, projects, additionalSections }) => {
   const fontFamily = "Arial, Helvetica, sans-serif";
 
   const SectionHeader = ({ title }) => (
@@ -12,63 +19,74 @@ const ATSClassic = ({ personalInfo, education, experience, skills, projects }) =
   );
 
   return (
-    <div className="w-full h-full flex justify-center bg-[#f8f9fb]">
-      <div className="bg-white w-full h-full min-h-[297mm] text-[#1a1a1a] shadow-sm max-w-[210mm] px-14 py-12" style={{ fontFamily }}>
-        {/* Header */}
+    <div className="resume-page-wrapper">
+      <div className="resume-a4-canvas px-14 py-12" style={{ fontFamily }}>
+        {/* Header - Centered for Classic Look */}
         <div className="mb-4 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+          <h1 className="text-3xl font-bold text-gray-900 mb-1 uppercase">
             {personalInfo?.firstName} {personalInfo?.lastName}
           </h1>
           {personalInfo?.title && (
-            <h2 className="text-[14px] font-bold text-gray-900 mb-2">
+            <h2 className="text-[14px] font-bold text-gray-800 mb-2">
               {personalInfo.title}
             </h2>
           )}
-          
-          <div className="text-[13px] text-gray-800 flex justify-center items-center gap-2 mb-0.5">
-            <span>{[personalInfo?.address, personalInfo?.city, personalInfo?.state, personalInfo?.zip, personalInfo?.country].filter(Boolean).join(', ')}</span>
-            {personalInfo?.address && <span>|</span>}
-            <span>{personalInfo?.email}</span>
+
+          <div className="resume-contact-info justify-center border-t border-gray-100 pt-2">
+            <span>{[personalInfo?.address, personalInfo?.city, personalInfo?.country].filter(Boolean).join(', ')}</span>
+            {personalInfo?.email && (
+              <>
+                <span className="text-gray-300">|</span>
+                <span className="resume-break-all">{personalInfo.email}</span>
+              </>
+            )}
             {personalInfo?.phone && (
               <>
-                <span>|</span>
+                <span className="text-gray-300">|</span>
                 <span>{personalInfo.phone}</span>
               </>
             )}
+            {(personalInfo?.socialLinks || []).map((link, idx) => (
+              <React.Fragment key={idx}>
+                <span className="text-gray-300">|</span>
+                <span className="resume-break-all text-blue-800">{link.url}</span>
+              </React.Fragment>
+            ))}
           </div>
         </div>
 
-        {/* Content */}
+        {/* Professional Summary */}
         {personalInfo?.summary && (
-          <div>
+          <div className="resume-section-spacing">
             <SectionHeader title="Professional Summary" />
-            <p className="text-[13px] leading-relaxed">
+            <p className="text-[13px] leading-relaxed text-gray-800">
               {personalInfo.summary}
             </p>
           </div>
         )}
 
+        {/* Experience Section */}
         {experience && experience.length > 0 && (
-          <div>
+          <div className="resume-section-spacing">
             <SectionHeader title="Professional Experience" />
-            <div className="space-y-4 text-[13px]">
+            <div className="space-y-4">
               {experience.map((exp, idx) => (
                 <div key={idx}>
-                  <div className="flex justify-between items-baseline mb-0.5">
+                  <div className="resume-flex-between">
                     <span className="font-bold text-[14px] text-gray-900">
                       {exp.position}
                     </span>
-                    <span className="text-gray-800 whitespace-nowrap">
+                    <span className="text-gray-700 text-[12px] italic">
                       {exp.startDate} — {exp.endDate || 'Present'}
                     </span>
                   </div>
-                  <div className="mb-1 text-gray-800 font-medium">
+                  <div className="mb-1 text-gray-800 font-bold text-[13px]">
                     {exp.company}{exp.location ? `, ${exp.location}` : ''}
                   </div>
                   {exp.description && (
-                    <ul className="list-disc pl-5 space-y-1 mt-1">
+                    <ul className="resume-list">
                       {exp.description.split('\n').filter(l => l.trim()).map((line, i) => (
-                        <li key={i} className="leading-relaxed">{line.replace(/^[•*-]\s*/, '')}</li>
+                        <li key={i} className="resume-list-item">{line.replace(/^[•*-]\s*/, '')}</li>
                       ))}
                     </ul>
                   )}
@@ -78,21 +96,22 @@ const ATSClassic = ({ personalInfo, education, experience, skills, projects }) =
           </div>
         )}
 
+        {/* Education Section */}
         {education && education.length > 0 && (
-          <div>
+          <div className="resume-section-spacing">
             <SectionHeader title="Education" />
-            <div className="space-y-3 text-[13px]">
+            <div className="space-y-4">
               {education.map((edu, idx) => (
-                <div key={idx} className="mb-2">
-                  <div className="flex justify-between items-baseline mb-0.5 mt-2">
-                     <span className="font-bold text-gray-900">
-                        {edu.school}{edu.location ? `, ${edu.location}` : ''}
-                     </span>
-                     <span className="whitespace-nowrap">
-                        {edu.startDate} — {edu.endDate || 'Present'}
-                     </span>
+                <div key={idx}>
+                  <div className="resume-flex-between">
+                    <span className="font-bold text-gray-900 text-[14px]">
+                      {edu.school}{edu.location ? `, ${edu.location}` : ''}
+                    </span>
+                    <span className="text-gray-700 text-[12px] italic">
+                      {edu.startDate} — {edu.endDate || 'Present'}
+                    </span>
                   </div>
-                  <div className="text-gray-800">
+                  <div className="text-gray-800 text-[13px]">
                     {edu.degree}{edu.field ? ` in ${edu.field}` : ''}
                   </div>
                 </div>
@@ -101,43 +120,38 @@ const ATSClassic = ({ personalInfo, education, experience, skills, projects }) =
           </div>
         )}
 
-        {projects && projects.length > 0 && (
-          <div>
-            <SectionHeader title="Projects" />
-            <div className="space-y-4 text-[13px]">
-              {projects.map((proj, idx) => (
-                <div key={idx}>
-                  <div className="flex justify-between items-baseline mb-0.5">
-                    <span className="font-bold text-[14px] text-gray-900">
-                      {proj.name}
-                    </span>
-                  </div>
-                  {proj.technologies && <div className="text-gray-800 mb-1">{proj.technologies}</div>}
-                  {proj.description && (
-                     <p className="leading-relaxed">{proj.description}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
+        {/* Skills Section */}
         {skills && skills.length > 0 && (
-          <div>
+          <div className="resume-section-spacing">
             <SectionHeader title="Skills" />
-            <div className="text-[13px] mt-2">
-              <span className="font-bold">Core Competencies: </span>
+            <div className="text-[13px] mt-2 text-gray-800">
+              <span className="font-bold uppercase tracking-tighter">Core Competencies: </span>
               {skills.map((skill, idx) => (
                 <span key={idx}>
-                  {skill.name} {skill.level ? `(${skill.level})` : ''}{idx < skills.length - 1 ? ', ' : ''}
+                  {skill.name}{idx < skills.length - 1 ? ', ' : ''}
                 </span>
               ))}
             </div>
           </div>
         )}
+
+        {/* Custom Additional Sections */}
+        {additionalSections && Object.entries(additionalSections).map(([key, items]) => {
+          if (!items || items.length === 0) return null;
+          return (
+            <div key={key} className="resume-section-spacing">
+              <SectionHeader title={ADDITIONAL_SECTION_LABELS[key] || key} />
+              <ul className="resume-list">
+                {items.map(item => (
+                  <li key={item.id} className="resume-list-item">{item.name}</li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
-};
+});
 
 export default ATSClassic;
