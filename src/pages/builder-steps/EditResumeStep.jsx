@@ -9,13 +9,18 @@ const EditResumeStep = () => {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+      className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-200px)] min-h-[600px]"
     >
-      <div className="lg:col-span-5 lg:sticky lg:top-[88px] lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto pb-4 scrollbar-hide">
-        <ResumeForm />
+      {/* Left - Resume Form */}
+      <div className="xl:w-[420px] w-full flex-shrink-0 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-y-auto p-4">
+          <ResumeForm />
+        </div>
       </div>
-      <div className="lg:col-span-7 h-full">
-        <ResumePreview hideTemplateSwitcher={true} initialZoom={0.85} />
+
+      {/* Right - Resume Preview (Fuller view) */}
+      <div className="flex-1 min-w-0 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <ResumePreview hideTemplateSwitcher={true} hideActionBar={true} initialZoom={1.0} />
       </div>
     </motion.div>
   );

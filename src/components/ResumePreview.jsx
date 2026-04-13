@@ -119,16 +119,17 @@ const ResumePreview = ({ hideTemplateSwitcher, hideActionBar, initialZoom = 0.75
       {/* Resume Preview Canvas */}
       <div className="bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl overflow-auto flex-1 relative"
         style={{ minHeight: hideActionBar ? '500px' : '600px' }}>
-        <div className="flex justify-center py-8 px-4">
+        <div className="flex justify-center items-start min-h-full p-4 md:p-6">
           <div
             style={{
               transform: `scale(${zoom})`,
               transformOrigin: 'top center',
               width: '210mm',
+              maxWidth: '100%',
               boxShadow: '0 8px 40px rgba(0,0,0,0.2)',
               borderRadius: '4px',
               overflow: 'hidden',
-              marginBottom: zoom < 1 ? `calc((1 - ${zoom}) * -297mm)` : 0,
+              marginBottom: zoom < 1 ? `calc((1 - ${zoom}) * -297mm)` : '20px',
             }}
           >
             <TemplateComponent {...resumeData} />
