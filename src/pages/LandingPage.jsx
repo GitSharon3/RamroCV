@@ -1,9 +1,35 @@
 import { Link } from 'react-router-dom';
-import { CheckCircle, ArrowRight, Sparkles, Shield, Zap, Download, Users, BarChart3, ChevronRight, Heart } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { 
+  CheckCircle, 
+  ArrowRight, 
+  Sparkles, 
+  Shield, 
+  Zap, 
+  Download, 
+  Users, 
+  BarChart3, 
+  ChevronRight, 
+  Heart, 
+  Menu, 
+  X,
+  Star,
+  FileText,
+  Layout,
+  Award,
+  ArrowUpRight
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useResumeStore } from '../store/resumeStore';
+import { useState, useEffect } from 'react';
 
-// Import assets
+// ============================================
+// STYLES
+// ============================================
+import './LandingPage.css';
+
+// ============================================
+// ASSET IMPORTS
+// ============================================
 import logo from '../assets/logo.png';
 import template1 from '../assets/template1.png';
 import template2 from '../assets/template2.png';
@@ -13,6 +39,9 @@ import template5 from '../assets/template5.png';
 import template6 from '../assets/template6.png';
 import template7 from '../assets/template7.png';
 
+// ============================================
+// ANIMATION CONFIGURATIONS
+// ============================================
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i = 0) => ({
@@ -22,217 +51,289 @@ const fadeUp = {
   }),
 };
 
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+// ============================================
+// NAVIGATION CONFIGURATION
+// ============================================
+const navItems = [
+  { label: 'Templates', href: '#templates', icon: Layout },
+  { label: 'Features', href: '#features', icon: Star },
+  { label: 'How It Works', href: '#how-it-works', icon: FileText },
+];
+
+// ============================================
+// LANDING PAGE COMPONENT
+// ============================================
 const LandingPage = () => {
   const { setActiveTemplate } = useResumeStore();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  // Removed handleStartBuilding as we handle via Link to /builder/choose
-  // Removed handleSelectTemplate as we handle via Link in templates section
+  // Handle scroll effect for navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Smooth scroll handler
+  const handleNavClick = (e, href) => {
+    e.preventDefault();
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setMobileMenuOpen(false);
+  };
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      {/* ─── Navbar ─── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-sky-100/60">
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 group">
-            <img 
-              src={logo} 
-              alt="RamroCV" 
-              className="w-8 h-8 object-contain transition-transform group-hover:scale-105"
-            />
-            <span className="text-lg font-extrabold text-gray-900 tracking-tight">
-              Ramro<span className="text-sky-500">CV</span>
+    <div className="landing-page">
+      {/* ============================================
+          NAVBAR SECTION
+          ============================================ */}
+      <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
+        <div className="navbar__container">
+          {/* Logo */}
+          <Link to="/" className="navbar__logo">
+            <img src={logo} alt="RamroCV" className="navbar__logo-img" />
+            <span className="navbar__logo-text">
+              Ramro<span className="navbar__logo-accent">CV</span>
             </span>
           </Link>
-          <Link
-            to="/builder/choose"
-            className="px-5 py-2 border-2 border-sky-500 text-sky-600 rounded-full text-sm font-bold hover:bg-sky-500 hover:text-white transition-all duration-200"
+
+          {/* Desktop Navigation */}
+          <div className="navbar__desktop">
+            {navItems.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                onClick={(e) => handleNavClick(e, item.href)}
+                className="navbar__link"
+              >
+                <item.icon size={16} />
+                <span>{item.label}</span>
+              </a>
+            ))}
+            <Link to="/builder/choose" className="navbar__cta">
+              Build My Resume
+              <ArrowUpRight size={16} />
+            </Link>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="navbar__mobile-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
           >
-            Build My Resume
-          </Link>
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
+
+        {/* Mobile Navigation */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="navbar__mobile"
+            >
+              {navItems.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className="navbar__mobile-link"
+                >
+                  <item.icon size={18} />
+                  <span>{item.label}</span>
+                </a>
+              ))}
+              <Link
+                to="/builder/choose"
+                className="navbar__mobile-cta"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Build My Resume
+                <ArrowUpRight size={16} />
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
-      {/* ─── Hero Section ─── */}
-      <section className="relative pt-28 pb-16 overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-sky-50 rounded-full blur-3xl opacity-60" />
-          <div className="absolute -bottom-20 -left-40 w-[500px] h-[500px] bg-sky-100 rounded-full blur-3xl opacity-40" />
+      {/* ============================================
+          HERO SECTION
+          ============================================ */}
+      <section className="hero">
+        {/* Background Decorations */}
+        <div className="hero__bg">
+          <div className="hero__bg-blob hero__bg-blob--1" />
+          <div className="hero__bg-blob hero__bg-blob--2" />
         </div>
 
-        <div className="max-w-6xl mx-auto px-5">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left — Copy */}
+        <div className="hero__container">
+          <div className="hero__grid">
+            {/* Left Column - Content */}
             <motion.div
               initial="hidden"
               animate="visible"
               variants={fadeUp}
-              className="space-y-7"
+              className="hero__content"
             >
+              {/* Trust Badge */}
+              <motion.div variants={fadeUp} custom={0} className="hero__badge">
+                <span className="hero__badge-dot" />
+                <span>Trusted by 50,000+ job seekers</span>
+              </motion.div>
 
               {/* Headline */}
-              <motion.h1
-                variants={fadeUp}
-                custom={1}
-                className="text-4xl sm:text-5xl lg:text-[3.25rem] font-extrabold text-gray-900 leading-[1.12] tracking-tight"
-              >
+              <motion.h1 variants={fadeUp} custom={1} className="hero__title">
                 Build a{' '}
-                <span className="text-sky-500 underline decoration-sky-200 underline-offset-4 decoration-[3px]">
-                  free resume
-                </span>{' '}
+                <span className="hero__title-accent">free resume</span>
+                <br />
                 in a few clicks
               </motion.h1>
 
               {/* Subhead */}
-              <motion.p
-                variants={fadeUp}
-                custom={2}
-                className="text-gray-600 text-lg leading-relaxed max-w-lg"
-              >
-                The first step to a better job? A better resume. Only 2% of resumes win, and yours will be one of them. Create it now with our free resume builder!
+              <motion.p variants={fadeUp} custom={2} className="hero__subtitle">
+                The first step to a better job? A better resume. Only 2% of resumes win, 
+                and yours will be one of them. Create it now with our free resume builder!
               </motion.p>
 
               {/* CTA Buttons */}
-              <motion.div variants={fadeUp} custom={3} className="flex flex-wrap gap-3 pt-1">
-                <Link
-                  to="/builder/choose"
-                  id="hero-cta-new"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 bg-sky-500 text-white rounded-xl text-sm font-bold hover:bg-sky-600 shadow-lg shadow-sky-200 hover:shadow-xl hover:shadow-sky-300 transition-all duration-200"
-                >
+              <motion.div variants={fadeUp} custom={3} className="hero__cta-group">
+                <Link to="/builder/choose" className="hero__cta hero__cta--primary">
                   Create a New Resume
-                  <ArrowRight size={16} />
+                  <ArrowRight size={18} />
                 </Link>
-                <Link
-                  to="/builder/choose"
-                  id="hero-cta-improve"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 border-2 border-sky-200 text-sky-600 rounded-xl text-sm font-bold hover:bg-sky-50 transition-all duration-200"
-                >
+                <Link to="/builder/choose" className="hero__cta hero__cta--secondary">
                   Improve My Resume
                 </Link>
               </motion.div>
 
               {/* Stats */}
-              <motion.div
-                variants={fadeUp}
-                custom={4}
-                className="flex items-center gap-6 pt-4"
-              >
-                <div>
-                  <div className="text-2xl font-extrabold text-sky-500">48%</div>
-                  <div className="text-xs text-gray-500">more likely to get hired</div>
+              <motion.div variants={fadeUp} custom={4} className="hero__stats">
+                <div className="hero__stat">
+                  <div className="hero__stat-value">48%</div>
+                  <div className="hero__stat-label">more likely to get hired</div>
                 </div>
-                <div className="w-px h-10 bg-gray-200" />
-                <div>
-                  <div className="text-2xl font-extrabold text-sky-500">12%</div>
-                  <div className="text-xs text-gray-500">better pay with your next job</div>
+                <div className="hero__stat-divider" />
+                <div className="hero__stat">
+                  <div className="hero__stat-value">12%</div>
+                  <div className="hero__stat-label">better pay with your next job</div>
                 </div>
               </motion.div>
             </motion.div>
 
-            {/* Right — Resume Preview Card */}
+            {/* Right Column - Preview Card */}
             <motion.div
               initial={{ opacity: 0, x: 40, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-              className="relative hidden lg:block"
+              className="hero__preview-wrapper"
             >
-              {/* Resume card */}
-              <div className="relative bg-white rounded-2xl shadow-2xl shadow-sky-100/50 border border-sky-100 p-0 overflow-hidden max-w-md mx-auto">
-                {/* Blue header */}
-                <div className="bg-gradient-to-r from-sky-500 to-sky-600 px-6 pt-6 pb-5 flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center">
-                    <Users className="text-white" size={28} />
+              {/* Resume Card */}
+              <div className="hero__preview-card">
+                {/* Card Header */}
+                <div className="hero__preview-header">
+                  <div className="hero__preview-avatar">
+                    <Users size={28} />
                   </div>
-                  <div>
-                    <div className="text-white font-bold text-lg">Samantha Williams</div>
-                    <div className="text-sky-100 text-sm">Senior Analyst</div>
-                    <div className="text-sky-200 text-xs mt-0.5">samantha.williams@email.com</div>
+                  <div className="hero__preview-info">
+                    <div className="hero__preview-name">Samantha Williams</div>
+                    <div className="hero__preview-role">Senior Analyst</div>
+                    <div className="hero__preview-email">samantha.williams@email.com</div>
                   </div>
                 </div>
 
-                {/* Color dots */}
-                <div className="flex gap-2 px-6 pt-4">
+                {/* Color Dots */}
+                <div className="hero__preview-colors">
                   {['bg-sky-500', 'bg-sky-400', 'bg-amber-400', 'bg-emerald-400', 'bg-slate-800', 'bg-gray-400'].map((c, i) => (
-                    <div key={i} className={`w-5 h-5 rounded-full ${c} ${i === 0 ? 'ring-2 ring-sky-300 ring-offset-1' : ''}`} />
+                    <div key={i} className={`hero__preview-color ${c} ${i === 0 ? 'hero__preview-color--active' : ''}`} />
                   ))}
                 </div>
 
-                {/* Resume content mockup */}
-                <div className="px-6 py-4 grid grid-cols-2 gap-4">
-                  {/* Left col */}
-                  <div className="space-y-3">
-                    <div>
-                      <div className="text-[10px] font-bold text-gray-800 uppercase tracking-wider mb-1.5">Summary</div>
-                      <div className="space-y-1">
-                        <div className="h-1.5 w-full bg-gray-200 rounded" />
-                        <div className="h-1.5 w-5/6 bg-gray-200 rounded" />
-                        <div className="h-1.5 w-4/6 bg-gray-200 rounded" />
+                {/* Resume Mockup Content */}
+                <div className="hero__preview-body">
+                  <div className="hero__preview-col">
+                    <div className="hero__preview-section">
+                      <div className="hero__preview-section-title">Summary</div>
+                      <div className="hero__preview-lines">
+                        <div className="hero__preview-line" />
+                        <div className="hero__preview-line hero__preview-line--80" />
+                        <div className="hero__preview-line hero__preview-line--60" />
                       </div>
                     </div>
-                    <div>
-                      <div className="text-[10px] font-bold text-gray-800 uppercase tracking-wider mb-1.5">Skills</div>
-                      <div className="flex flex-wrap gap-1">
+                    <div className="hero__preview-section">
+                      <div className="hero__preview-section-title">Skills</div>
+                      <div className="hero__preview-tags">
                         {['Project Mgmt', 'Data Analysis', 'Statistical Modeling'].map((s, i) => (
-                          <span key={i} className="text-[7px] bg-sky-50 text-sky-600 px-1.5 py-0.5 rounded font-medium">{s}</span>
+                          <span key={i} className="hero__preview-tag">{s}</span>
                         ))}
                       </div>
                     </div>
                   </div>
-                  {/* Right col */}
-                  <div className="space-y-3">
-                    <div>
-                      <div className="text-[10px] font-bold text-gray-800 uppercase tracking-wider mb-1.5">Experience</div>
-                      <div className="text-[8px] font-bold text-gray-700">Senior Analyst</div>
-                      <div className="text-[7px] text-gray-500 mb-1">Tech Corp · 2022 — Present</div>
-                      <div className="space-y-0.5">
-                        <div className="h-1 w-full bg-gray-100 rounded" />
-                        <div className="h-1 w-4/5 bg-gray-100 rounded" />
-                        <div className="h-1 w-full bg-gray-100 rounded" />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[8px] font-bold text-gray-700">Business Analyst</div>
-                      <div className="text-[7px] text-gray-500 mb-1">StartupX · 2019 — 2022</div>
-                      <div className="space-y-0.5">
-                        <div className="h-1 w-full bg-gray-100 rounded" />
-                        <div className="h-1 w-3/5 bg-gray-100 rounded" />
+                  <div className="hero__preview-col">
+                    <div className="hero__preview-section">
+                      <div className="hero__preview-section-title">Experience</div>
+                      <div className="hero__preview-job">
+                        <div className="hero__preview-job-title">Senior Analyst</div>
+                        <div className="hero__preview-job-company">Tech Corp · 2022 — Present</div>
+                        <div className="hero__preview-job-lines">
+                          <div className="hero__preview-job-line" />
+                          <div className="hero__preview-job-line hero__preview-job-line--80" />
+                          <div className="hero__preview-job-line" />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* ATS badge */}
-                <div className="mx-6 mb-4">
-                  <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 text-xs font-bold px-3 py-1.5 rounded-full border border-emerald-200">
-                    <CheckCircle size={13} />
-                    ATS Perfect
-                  </div>
+                {/* ATS Badge */}
+                <div className="hero__preview-badge">
+                  <CheckCircle size={14} />
+                  ATS Perfect
                 </div>
               </div>
 
-              {/* Floating AI card */}
+              {/* Floating AI Card */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.5 }}
-                className="absolute -bottom-6 -right-4 bg-white rounded-xl shadow-xl border border-gray-100 p-4 w-56"
+                className="hero__ai-card"
               >
-                <div className="flex items-center gap-2 text-sky-500 font-bold text-xs mb-2.5">
-                  <Sparkles size={14} />
-                  AI-powered ideas
+                <div className="hero__ai-card-header">
+                  <Sparkles size={16} />
+                  <span>AI-powered ideas</span>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <div className="w-4 h-4 mt-0.5 rounded-full bg-sky-100 flex items-center justify-center flex-shrink-0">
-                      <ArrowRight size={8} className="text-sky-500" />
+                <div className="hero__ai-card-items">
+                  <div className="hero__ai-card-item">
+                    <div className="hero__ai-card-icon">
+                      <ArrowRight size={10} />
                     </div>
-                    <p className="text-[10px] text-gray-600 leading-snug">Analyzed market trends to identify new growth opportunities.</p>
+                    <p>Analyzed market trends to identify new growth opportunities.</p>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <div className="w-4 h-4 mt-0.5 rounded-full bg-sky-100 flex items-center justify-center flex-shrink-0">
-                      <ArrowRight size={8} className="text-sky-500" />
+                  <div className="hero__ai-card-item">
+                    <div className="hero__ai-card-icon">
+                      <ArrowRight size={10} />
                     </div>
-                    <p className="text-[10px] text-gray-600 leading-snug">Reduced operational costs by 15% through process optimization.</p>
+                    <p>Reduced operational costs by 15% through process optimization.</p>
                   </div>
                 </div>
               </motion.div>
@@ -242,29 +343,32 @@ const LandingPage = () => {
       </section>
 
 
-      {/* ─── Features Section ─── */}
-      <section className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-5">
+      {/* ============================================
+          FEATURES SECTION
+          ============================================ */}
+      <section id="features" className="features">
+        <div className="features__container">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
             variants={fadeUp}
-            className="text-center mb-14"
+            className="features__header"
           >
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
-              Everything you need to build a <span className="text-sky-500">winning resume</span>
+            <span className="features__eyebrow">Features</span>
+            <h2 className="features__title">
+              Everything you need to build a <span className="features__title-accent">winning resume</span>
             </h2>
-            <p className="text-gray-500 text-lg max-w-xl mx-auto">
+            <p className="features__subtitle">
               Professional tools, beautiful templates, and smart features — all in one place, completely free.
             </p>
           </motion.div>
         </div>
 
         {/* Marquee Container */}
-        <div className="relative w-full overflow-hidden flex whitespace-nowrap before:content-[''] before:absolute before:left-0 before:top-0 before:w-16 md:before:w-32 before:h-full before:bg-gradient-to-r before:from-white before:to-transparent before:z-10 after:content-[''] after:absolute after:right-0 after:top-0 after:w-16 md:after:w-32 after:h-full after:bg-gradient-to-l after:from-white after:to-transparent after:z-10 py-4">
+        <div className="features__marquee">
           <motion.div
-            className="flex gap-6 items-center px-6"
+            className="features__marquee-track"
             animate={{ x: ["0%", "-50%"] }}
             transition={{
               repeat: Infinity,
@@ -288,23 +392,20 @@ const LandingPage = () => {
               { icon: BarChart3, title: 'Drag & Reorder', desc: 'Customize section order by dragging. Your resume, your layout.', color: 'indigo' },
             ].map((feat, i) => {
               const colorMap = {
-                sky: 'bg-sky-50 text-sky-500 border-sky-100',
-                amber: 'bg-amber-50 text-amber-500 border-amber-100',
-                emerald: 'bg-emerald-50 text-emerald-500 border-emerald-100',
-                violet: 'bg-violet-50 text-violet-500 border-violet-100',
-                rose: 'bg-rose-50 text-rose-500 border-rose-100',
-                indigo: 'bg-indigo-50 text-indigo-500 border-indigo-100',
+                sky: { bg: 'features__card-icon--sky', text: 'features__card-text--sky' },
+                amber: { bg: 'features__card-icon--amber', text: 'features__card-text--amber' },
+                emerald: { bg: 'features__card-icon--emerald', text: 'features__card-text--emerald' },
+                violet: { bg: 'features__card-icon--violet', text: 'features__card-text--violet' },
+                rose: { bg: 'features__card-icon--rose', text: 'features__card-text--rose' },
+                indigo: { bg: 'features__card-icon--indigo', text: 'features__card-text--indigo' },
               };
               return (
-                <div
-                  key={`${feat.title}-${i}`}
-                  className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg hover:shadow-gray-100 transition-shadow min-w-[320px] max-w-[320px] whitespace-normal"
-                >
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 border ${colorMap[feat.color]}`}>
+                <div key={`${feat.title}-${i}`} className="features__card">
+                  <div className={`features__card-icon ${colorMap[feat.color].bg}`}>
                     <feat.icon size={20} />
                   </div>
-                  <h3 className="font-bold text-gray-900 mb-2">{feat.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{feat.desc}</p>
+                  <h3 className="features__card-title">{feat.title}</h3>
+                  <p className="features__card-desc">{feat.desc}</p>
                 </div>
               );
             })}
@@ -312,29 +413,32 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* ─── Templates Preview ─── */}
-      <section className="py-24 bg-sky-50/30 overflow-hidden">
-        <div className="max-w-6xl mx-auto px-5 mb-16">
+      {/* ============================================
+          TEMPLATES SECTION
+          ============================================ */}
+      <section id="templates" className="templates">
+        <div className="templates__container">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeUp}
-            className="text-center"
+            className="templates__header"
           >
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-gray-900 mb-6">
-              Expertly Crafted <span className="text-sky-500">Resume Dimensions</span>
+            <span className="templates__eyebrow">Templates</span>
+            <h2 className="templates__title">
+              Expertly Crafted <span className="templates__title-accent">Resume Designs</span>
             </h2>
-            <p className="text-gray-500 text-lg max-w-2xl mx-auto leading-relaxed">
-              Elevate your professional narrative with our diverse collection of ATS-optimized and designer layouts. 
-              Find the perfect architecture to showcase your career projectory.
+            <p className="templates__subtitle">
+              Elevate your professional narrative with our diverse collection of ATS-optimized 
+              and designer layouts. Find the perfect architecture to showcase your career trajectory.
             </p>
           </motion.div>
         </div>
 
-        {/* Manual Template Showcase */}
-        <div className="max-w-7xl mx-auto px-5">
-          <div className="flex gap-8 overflow-x-auto pb-12 snap-x snap-mandatory scrollbar-hide no-scrollbar -mx-5 px-5 lg:-mx-0 lg:px-0">
+        {/* Template Showcase */}
+        <div className="templates__showcase">
+          <div className="templates__grid">
             {[
               { img: template1, id: 'celestial', name: 'Celestial', desc: 'Refined neutral tones' },
               { img: template2, id: 'ats-classic', name: 'ATS Classic', desc: 'Machine readable' },
@@ -345,45 +449,31 @@ const LandingPage = () => {
               { img: template7, id: 'nova', name: 'Nova', desc: 'Bold & Impactful' },
               { img: template2, id: 'ats', name: 'ATS', desc: 'Simple & Neat' },
             ].map((tpl) => (
-              <div
-                key={`template-${tpl.id}`}
-                className="relative min-w-[280px] sm:min-w-[380px] bg-white rounded-[2rem] shadow-xl shadow-sky-100/40 border border-sky-50 overflow-hidden group snap-center transition-all duration-500 hover:shadow-2xl hover:shadow-sky-200/50"
-              >
+              <div key={`template-${tpl.id}`} className="templates__card">
                 {/* Image & Hover Container */}
-                <div className="relative aspect-[3/4] overflow-hidden">
-                  <img 
-                    src={tpl.img} 
-                    alt={tpl.name} 
-                    className="w-full h-full object-cover grayscale-[0.2] blur-[0px] group-hover:grayscale-0 group-hover:blur-[2px] transition-all duration-700 group-hover:scale-110"
-                  />
+                <div className="templates__card-image-wrapper">
+                  <img src={tpl.img} alt={tpl.name} className="templates__card-image" />
                   
-                  {/* Premium Advanced Hover Overlay */}
-                  <div className="absolute inset-0 bg-sky-900/10 backdrop-blur-[0px] group-hover:backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-6 text-center">
+                  {/* Hover Overlay */}
+                  <div className="templates__card-overlay">
                     {/* Floating Template Badge */}
-                    <div className="absolute top-6 left-1/2 -translate-x-1/2 -translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100">
-                      <span className="px-4 py-1.5 bg-white/90 backdrop-blur rounded-full text-[10px] font-black text-sky-600 uppercase tracking-[0.2em] shadow-xl border border-white">
-                        {tpl.name}
-                      </span>
+                    <div className="templates__card-badge">
+                      <span>{tpl.name}</span>
                     </div>
 
                     {/* Main CTA Button */}
-                    <button 
-                      onClick={() => {
-                        setActiveTemplate(tpl.id);
-                      }}
+                    <Link 
+                      to="/builder/details" 
+                      onClick={() => setActiveTemplate(tpl.id)}
+                      className="templates__card-cta"
                     >
-                      <Link 
-                        to="/builder/details" 
-                        className="inline-flex items-center gap-3 px-8 py-4 bg-sky-500 text-white font-bold rounded-2xl shadow-2xl shadow-sky-500/30 hover:bg-sky-600 hover:scale-105 active:scale-95 transition-all duration-300 translate-y-8 group-hover:translate-y-0"
-                      >
-                        <Sparkles size={18} className="animate-pulse" />
-                        Use This Template
-                      </Link>
-                    </button>
+                      <Sparkles size={18} />
+                      Use This Template
+                    </Link>
 
                     {/* Subtitle */}
-                    <div className="mt-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-200">
-                      <p className="text-white text-xs font-semibold tracking-wide drop-shadow-md">{tpl.desc}</p>
+                    <div className="templates__card-desc">
+                      <p>{tpl.desc}</p>
                     </div>
                   </div>
                 </div>
@@ -391,96 +481,193 @@ const LandingPage = () => {
             ))}
           </div>
           
-          {/* Scroll controls hint */}
-          <div className="flex items-center justify-center gap-6 mt-4">
-            <div className="h-[2px] w-32 bg-sky-100 rounded-full relative overflow-hidden">
-               <motion.div 
-                 className="absolute inset-0 bg-sky-500"
-                 animate={{ x: [-128, 128] }}
-                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-               />
+          {/* Scroll Indicator */}
+          <div className="templates__scroll-indicator">
+            <div className="templates__scroll-bar">
+              <motion.div 
+                className="templates__scroll-progress"
+                animate={{ x: [-128, 128] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              />
             </div>
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-              Scroll horizontally to explore
-            </span>
-            <div className="h-[2px] w-32 bg-sky-100 rounded-full relative overflow-hidden">
-               <motion.div 
-                 className="absolute inset-0 bg-sky-500"
-                 animate={{ x: [-128, 128] }}
-                 transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
-               />
+            <span className="templates__scroll-text">Scroll horizontally to explore</span>
+            <div className="templates__scroll-bar">
+              <motion.div 
+                className="templates__scroll-progress"
+                animate={{ x: [-128, 128] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
+              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── CTA Section ─── */}
-      <section className="py-20 bg-white">
-        <div className="max-w-3xl mx-auto px-5 text-center">
+      {/* ============================================
+          HOW IT WORKS SECTION
+          ============================================ */}
+      <section id="how-it-works" className="how-it-works">
+        <div className="how-it-works__container">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeUp}
+            className="how-it-works__header"
           >
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
-              Ready to build your resume?
+            <span className="how-it-works__eyebrow">How It Works</span>
+            <h2 className="how-it-works__title">
+              Build your resume in <span className="how-it-works__title-accent">3 simple steps</span>
             </h2>
-            <p className="text-gray-500 text-lg mb-8 max-w-md mx-auto">
-              Join thousands who've landed their dream jobs with resumes built on RamroCV.
+            <p className="how-it-works__subtitle">
+              No complicated software. No design skills needed. Just answer a few questions and get a professional resume in minutes.
             </p>
-            <Link
-              to="/builder"
-              id="cta-bottom-btn"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-sky-500 text-white rounded-xl font-bold text-base hover:bg-sky-600 shadow-lg shadow-sky-200 hover:shadow-xl hover:shadow-sky-300 transition-all duration-200"
-            >
-              Start Building — It's Free
-              <ChevronRight size={18} />
-            </Link>
-            <p className="text-xs text-gray-400 mt-4">No sign-up required · Your data stays in your browser</p>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="how-it-works__steps"
+          >
+            {[
+              {
+                number: '01',
+                icon: Layout,
+                title: 'Choose a Template',
+                desc: 'Browse our collection of ATS-optimized templates and pick the one that fits your style.',
+              },
+              {
+                number: '02',
+                icon: FileText,
+                title: 'Fill in Your Details',
+                desc: 'Enter your work experience, education, and skills. Our AI helps suggest improvements.',
+              },
+              {
+                number: '03',
+                icon: Download,
+                title: 'Download & Apply',
+                desc: 'Export your resume as a PDF and start applying to your dream jobs immediately.',
+              },
+            ].map((step, i) => (
+              <motion.div
+                key={step.number}
+                variants={fadeUp}
+                custom={i}
+                className="how-it-works__step"
+              >
+                <div className="how-it-works__step-number">{step.number}</div>
+                <div className="how-it-works__step-icon">
+                  <step.icon size={28} />
+                </div>
+                <h3 className="how-it-works__step-title">{step.title}</h3>
+                <p className="how-it-works__step-desc">{step.desc}</p>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </section>
 
-      {/* ─── Footer ─── */}
-      <footer className="bg-gray-900 border-t border-gray-800 py-12">
-        <div className="max-w-6xl mx-auto px-5 grid grid-cols-1 sm:grid-cols-3 gap-8">
-          <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2">
-              <img 
-                src={logo} 
-                alt="RamroCV" 
-                className="w-8 h-8 object-contain"
-              />
-              <span className="font-bold text-white text-xl">
-                Ramro<span className="text-sky-500">CV</span>
-              </span>
-            </Link>
-            <p className="text-sm text-gray-400 max-w-sm">
-              The easiest way to build a professional, ATS-friendly resume that lands you interviews. No login required.
+      {/* ============================================
+          CTA SECTION
+          ============================================ */}
+      <section className="cta">
+        <div className="cta__container">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeUp}
+            className="cta__content"
+          >
+            <div className="cta__badge">
+              <Sparkles size={16} />
+              <span>Free forever. No credit card required.</span>
+            </div>
+            <h2 className="cta__title">
+              Ready to build your resume?
+            </h2>
+            <p className="cta__subtitle">
+              Join thousands who've landed their dream jobs with resumes built on RamroCV.
             </p>
-          </div>
-          
-          <div className="flex flex-col gap-3">
-            <span className="text-white font-semibold mb-2">Build</span>
-            <Link to="/builder" className="text-gray-400 hover:text-sky-400 text-sm transition-colors">Start Building</Link>
-            <Link to="/builder" className="text-gray-400 hover:text-sky-400 text-sm transition-colors">Templates</Link>
-            <Link to="/builder" className="text-gray-400 hover:text-sky-400 text-sm transition-colors">Import LaTeX</Link>
-          </div>
-          
-          <div className="flex flex-col gap-3">
-            <span className="text-white font-semibold mb-2">Legal</span>
-            <a href="#" className="text-gray-400 hover:text-sky-400 text-sm transition-colors">Privacy Policy</a>
-            <a href="#" className="text-gray-400 hover:text-sky-400 text-sm transition-colors">Terms of Service</a>
-          </div>
+            <Link to="/builder/choose" className="cta__button">
+              Start Building — It's Free
+              <ChevronRight size={20} />
+            </Link>
+            <p className="cta__note">No sign-up required · Your data stays in your browser</p>
+          </motion.div>
         </div>
-        
-        <div className="max-w-6xl mx-auto px-5 mt-12 pt-8 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} RamroCV. All rights reserved.
-          </p>
-          <div className="flex items-center gap-1.5 text-sm text-gray-400">
-            Made with <Heart size={14} className="text-rose-500 fill-rose-500" /> by <span className="text-white font-medium">Sharon</span>
+      </section>
+
+      {/* ============================================
+          FOOTER SECTION
+          ============================================ */}
+      <footer className="footer">
+        <div className="footer__container">
+          <div className="footer__grid">
+            {/* Brand Column */}
+            <div className="footer__brand">
+              <Link to="/" className="footer__logo">
+                <img src={logo} alt="RamroCV" className="footer__logo-img" />
+                <span className="footer__logo-text">
+                  Ramro<span className="footer__logo-accent">CV</span>
+                </span>
+              </Link>
+              <p className="footer__tagline">
+                The easiest way to build a professional, ATS-friendly resume that lands you interviews. No login required.
+              </p>
+              <div className="footer__social">
+                <a href="#" className="footer__social-link" aria-label="Twitter">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </a>
+                <a href="#" className="footer__social-link" aria-label="LinkedIn">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                </a>
+                <a href="#" className="footer__social-link" aria-label="GitHub">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            {/* Links Columns */}
+            <div className="footer__links">
+              <span className="footer__links-title">Product</span>
+              <a href="#templates" className="footer__link">Templates</a>
+              <a href="#features" className="footer__link">Features</a>
+              <a href="#how-it-works" className="footer__link">How It Works</a>
+              <Link to="/builder/choose" className="footer__link">Start Building</Link>
+            </div>
+
+            <div className="footer__links">
+              <span className="footer__links-title">Resources</span>
+              <Link to="/builder" className="footer__link">Resume Builder</Link>
+              <Link to="/builder" className="footer__link">Import LaTeX</Link>
+              <a href="#" className="footer__link">ATS Tips</a>
+              <a href="#" className="footer__link">Career Blog</a>
+            </div>
+
+            <div className="footer__links">
+              <span className="footer__links-title">Legal</span>
+              <a href="#" className="footer__link">Privacy Policy</a>
+              <a href="#" className="footer__link">Terms of Service</a>
+              <a href="#" className="footer__link">Cookie Policy</a>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="footer__bottom">
+            <p className="footer__copyright">
+              © {new Date().getFullYear()} RamroCV. All rights reserved.
+            </p>
+            <div className="footer__made-with">
+              Made with <Heart size={14} /> by <span className="footer__author">Sharon</span>
+            </div>
           </div>
         </div>
       </footer>
