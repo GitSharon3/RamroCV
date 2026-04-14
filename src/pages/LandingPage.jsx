@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
-import { FileText, CheckCircle, Star, ArrowRight, Sparkles, Shield, Zap, Download, Users, BarChart3, ChevronRight, Heart } from 'lucide-react';
+import { CheckCircle, ArrowRight, Sparkles, Shield, Zap, Download, Users, BarChart3, ChevronRight, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useResumeStore } from '../store/resumeStore';
 
-// Import template assets
+// Import assets
+import logo from '../assets/logo.png';
 import template1 from '../assets/template1.png';
 import template2 from '../assets/template2.png';
 import template3 from '../assets/template3.png';
@@ -21,10 +22,8 @@ const fadeUp = {
   }),
 };
 
-const BRAND_COLOR = '#0ea5e9'; // sky-500
-
 const LandingPage = () => {
-  const { setWizardStep, setActiveTemplate } = useResumeStore();
+  const { setActiveTemplate } = useResumeStore();
 
   // Removed handleStartBuilding as we handle via Link to /builder/choose
   // Removed handleSelectTemplate as we handle via Link in templates section
@@ -34,17 +33,18 @@ const LandingPage = () => {
       {/* ─── Navbar ─── */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-sky-100/60">
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 bg-sky-500 rounded-xl flex items-center justify-center shadow-md shadow-sky-200 group-hover:shadow-lg group-hover:shadow-sky-300 transition-shadow">
-              <FileText className="text-white" size={18} strokeWidth={2.5} />
-            </div>
+          <Link to="/" className="flex items-center gap-3 group">
+            <img 
+              src={logo} 
+              alt="RamroCV" 
+              className="w-8 h-8 object-contain transition-transform group-hover:scale-105"
+            />
             <span className="text-lg font-extrabold text-gray-900 tracking-tight">
               Ramro<span className="text-sky-500">CV</span>
             </span>
           </Link>
           <Link
             to="/builder/choose"
-            id="nav-build-btn"
             className="px-5 py-2 border-2 border-sky-500 text-sky-600 rounded-full text-sm font-bold hover:bg-sky-500 hover:text-white transition-all duration-200"
           >
             Build My Resume
@@ -446,14 +446,16 @@ const LandingPage = () => {
       <footer className="bg-gray-900 border-t border-gray-800 py-12">
         <div className="max-w-6xl mx-auto px-5 grid grid-cols-1 sm:grid-cols-3 gap-8">
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
-                <FileText className="text-white" size={16} />
-              </div>
+            <Link to="/" className="flex items-center gap-2">
+              <img 
+                src={logo} 
+                alt="RamroCV" 
+                className="w-8 h-8 object-contain"
+              />
               <span className="font-bold text-white text-xl">
                 Ramro<span className="text-sky-500">CV</span>
               </span>
-            </div>
+            </Link>
             <p className="text-sm text-gray-400 max-w-sm">
               The easiest way to build a professional, ATS-friendly resume that lands you interviews. No login required.
             </p>
