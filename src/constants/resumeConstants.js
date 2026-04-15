@@ -1,6 +1,3 @@
-/**
- * Centralized Labels for the Resume Builder * */
-
 export const ADDITIONAL_SECTION_LABELS = {
   languages: 'Languages',
   certifications: 'Certifications',

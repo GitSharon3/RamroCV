@@ -440,14 +440,13 @@ const LandingPage = () => {
         <div className="templates__showcase">
           <div className="templates__grid">
             {[
-              { img: template1, id: 'celestial', name: 'Celestial', desc: 'Refined neutral tones' },
-              { img: template2, id: 'ats-classic', name: 'ATS Classic', desc: 'Machine readable' },
-              { img: template3, id: 'astralis', name: 'Astralis', desc: 'Classic & Professional' },
-              { img: template4, id: 'lumina', name: 'Lumina', desc: 'Modern 2-column with banner' },
-              { img: template5, id: 'zenith', name: 'Zenith', desc: 'Elegant centered header' },
-              { img: template6, id: 'horizon', name: 'Horizon', desc: 'Striking left sidebar' },
-              { img: template7, id: 'nova', name: 'Nova', desc: 'Bold & Impactful' },
-              { img: template2, id: 'ats', name: 'ATS', desc: 'Simple & Neat' },
+              { img: template4, id: 'ats-classic', name: 'ATS Classic', desc: 'Professional Monochrome' },
+              { img: template5, id: 'horizon', name: 'Horizon', desc: 'Minimalist Framed' },
+              { img: template6, id: 'nova', name: 'Nova', desc: 'Bold Impact Photo' },
+              { img: template1, id: 'celestial', name: 'Celestial', desc: 'Refined Neutral Tones' },
+              { img: template3, id: 'lumina', name: 'Lumina', desc: 'Modern 2-Column' },
+              { img: template7, id: 'astralis', name: 'Astralis', desc: 'Classic ATS Proof' },
+              { img: template2, id: 'zenith', name: 'Zenith', desc: 'Elegant Executive' },
             ].map((tpl) => (
               <div key={`template-${tpl.id}`} className="templates__card">
                 {/* Image & Hover Container */}

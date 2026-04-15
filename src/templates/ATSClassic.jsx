@@ -1,18 +1,18 @@
 import React, { memo } from 'react';
 import './template.css';
-import { ADDITIONAL_SECTION_LABELS } from '../constants/AdditionalSectionConstants';
+import { ADDITIONAL_SECTION_LABELS } from '../constants/resumeConstants';
 
 /**
  * ATS Classic Template
- * Features: High machine readability, standard sans-serif font, logical structure.
- * Best for: Standard corporate applications and legacy portal uploads.
+ * Features: High machine readability, standard serif font, logical structure.
+ * Based on: reference image template4.png
  */
 const ATSClassic = memo(({ personalInfo, education, experience, skills, projects, additionalSections }) => {
-  const fontFamily = "Arial, Helvetica, sans-serif";
+  const fontFamily = '"Times New Roman", Times, serif';
 
   const SectionHeader = ({ title }) => (
-    <div className="mb-3 border-b border-gray-400 pb-1 mt-5">
-      <h2 className="uppercase font-bold text-[16px] text-gray-900 tracking-wide">
+    <div className="mt-6 mb-2">
+      <h2 className="uppercase font-bold text-[14px] text-gray-900 tracking-wider border-none">
         {title}
       </h2>
     </div>
@@ -21,72 +21,67 @@ const ATSClassic = memo(({ personalInfo, education, experience, skills, projects
   return (
     <div className="resume-page-wrapper">
       <div className="resume-a4-canvas px-14 py-12" style={{ fontFamily }}>
-        {/* Header - Centered for Classic Look */}
-        <div className="mb-4 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1 uppercase">
-            {personalInfo?.firstName} {personalInfo?.lastName}
-          </h1>
+        {/* Header - Centered as per template4.png */}
+        <div className="mb-6 text-center">
           {personalInfo?.title && (
-            <h2 className="text-[14px] font-bold text-gray-800 mb-2">
+            <h2 className="text-[13px] font-medium text-gray-700 mb-1 italic">
               {personalInfo.title}
             </h2>
           )}
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {personalInfo?.firstName} {personalInfo?.lastName}
+          </h1>
 
-          <div className="resume-contact-info justify-center border-t border-gray-100 pt-2">
-            <span>{[personalInfo?.address, personalInfo?.city, personalInfo?.country].filter(Boolean).join(', ')}</span>
-            {personalInfo?.email && (
-              <>
-                <span className="text-gray-300">|</span>
-                <span className="resume-break-all">{personalInfo.email}</span>
-              </>
-            )}
-            {personalInfo?.phone && (
-              <>
-                <span className="text-gray-300">|</span>
-                <span>{personalInfo.phone}</span>
-              </>
-            )}
-            {(personalInfo?.socialLinks || []).map((link, idx) => (
-              <React.Fragment key={idx}>
-                <span className="text-gray-300">|</span>
-                <span className="resume-break-all text-blue-800">{link.url}</span>
-              </React.Fragment>
-            ))}
+          <div className="text-[12px] text-gray-800 space-y-0.5">
+            <div className="flex justify-center gap-1">
+              <span>{[personalInfo?.address, personalInfo?.city, personalInfo?.country].filter(Boolean).join(', ')}</span>
+            </div>
+            <div className="flex justify-center gap-4">
+              {personalInfo?.email && <span className="resume-break-all">{personalInfo.email}</span>}
+              {personalInfo?.phone && <span>{personalInfo.phone}</span>}
+            </div>
+            <div className="flex justify-center gap-3">
+              {(personalInfo?.socialLinks || []).map((link, idx) => (
+                <span key={idx} className="resume-break-all text-gray-700">
+                  {link.url}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Professional Summary */}
+        {/* Dashed horizontal divider under header */}
+        <div className="border-t border-dashed border-gray-300 mb-6"></div>
+
+        {/* Professional Summary (SUMMARY) */}
         {personalInfo?.summary && (
           <div className="resume-section-spacing">
-            <SectionHeader title="Professional Summary" />
-            <p className="text-[13px] leading-relaxed text-gray-800">
+            <SectionHeader title="SUMMARY" />
+            <p className="text-[13px] leading-relaxed text-gray-800 text-justify">
               {personalInfo.summary}
             </p>
           </div>
         )}
 
-        {/* Experience Section */}
+        {/* Experience Section (EXPERIENCE) */}
         {experience && experience.length > 0 && (
           <div className="resume-section-spacing">
-            <SectionHeader title="Professional Experience" />
-            <div className="space-y-4">
+            <SectionHeader title="EXPERIENCE" />
+            <div className="space-y-5">
               {experience.map((exp, idx) => (
                 <div key={idx}>
-                  <div className="resume-flex-between">
-                    <span className="font-bold text-[14px] text-gray-900">
-                      {exp.position}
-                    </span>
-                    <span className="text-gray-700 text-[12px] italic">
-                      {exp.startDate} — {exp.endDate || 'Present'}
+                  <div className="flex justify-between items-baseline mb-0.5">
+                    <span className="font-bold text-[14px] text-gray-900 uppercase">
+                      {exp.position} | <span className="font-normal normal-case text-gray-700 italic">{exp.startDate} — {exp.endDate || 'Current'}</span>
                     </span>
                   </div>
-                  <div className="mb-1 text-gray-800 font-bold text-[13px]">
-                    {exp.company}{exp.location ? `, ${exp.location}` : ''}
+                  <div className="mb-1 text-gray-800 text-[13px]">
+                    {exp.company}{exp.location ? ` - ${exp.location}` : ''}
                   </div>
                   {exp.description && (
-                    <ul className="resume-list">
+                    <ul className="resume-list !pl-4">
                       {exp.description.split('\n').filter(l => l.trim()).map((line, i) => (
-                        <li key={i} className="resume-list-item">{line.replace(/^[•*-]\s*/, '')}</li>
+                        <li key={i} className="resume-list-item text-justify">{line.replace(/^[•*-]\s*/, '')}</li>
                       ))}
                     </ul>
                   )}
@@ -96,23 +91,21 @@ const ATSClassic = memo(({ personalInfo, education, experience, skills, projects
           </div>
         )}
 
-        {/* Education Section */}
+        {/* Education Section (EDUCATION) */}
         {education && education.length > 0 && (
           <div className="resume-section-spacing">
-            <SectionHeader title="Education" />
+            <SectionHeader title="EDUCATION" />
             <div className="space-y-4">
               {education.map((edu, idx) => (
                 <div key={idx}>
-                  <div className="resume-flex-between">
+                  <div className="flex justify-between items-baseline mb-0.5">
                     <span className="font-bold text-gray-900 text-[14px]">
-                      {edu.school}{edu.location ? `, ${edu.location}` : ''}
-                    </span>
-                    <span className="text-gray-700 text-[12px] italic">
-                      {edu.startDate} — {edu.endDate || 'Present'}
+                      {edu.school}{edu.location ? ` - ${edu.location}` : ''} | <span className="font-normal italic text-gray-700 text-[13px]">{edu.degree}</span>
                     </span>
                   </div>
-                  <div className="text-gray-800 text-[13px]">
-                    {edu.degree}{edu.field ? ` in ${edu.field}` : ''}
+                  <div className="text-gray-800 text-[13px] italic">
+                    {edu.startDate}{edu.endDate ? ` - ${edu.endDate}` : ''}
+                    {edu.field ? ` · ${edu.field}` : ''}
                   </div>
                 </div>
               ))}
@@ -120,17 +113,21 @@ const ATSClassic = memo(({ personalInfo, education, experience, skills, projects
           </div>
         )}
 
-        {/* Skills Section */}
+        {/* Skills Section (SKILLS) - Two column list as per image */}
         {skills && skills.length > 0 && (
           <div className="resume-section-spacing">
-            <SectionHeader title="Skills" />
-            <div className="text-[13px] mt-2 text-gray-800">
-              <span className="font-bold uppercase tracking-tighter">Core Competencies: </span>
-              {skills.map((skill, idx) => (
-                <span key={idx}>
-                  {skill.name}{idx < skills.length - 1 ? ', ' : ''}
-                </span>
-              ))}
+            <SectionHeader title="SKILLS" />
+            <div className="grid grid-cols-2 gap-x-8 mt-1">
+              <ul className="resume-list !pl-4 list-disc">
+                {skills.slice(0, Math.ceil(skills.length / 2)).map((skill, idx) => (
+                  <li key={idx} className="resume-list-item">{skill.name}</li>
+                ))}
+              </ul>
+              <ul className="resume-list !pl-4 list-disc">
+                {skills.slice(Math.ceil(skills.length / 2)).map((skill, idx) => (
+                  <li key={idx} className="resume-list-item">{skill.name}</li>
+                ))}
+              </ul>
             </div>
           </div>
         )}
@@ -140,8 +137,8 @@ const ATSClassic = memo(({ personalInfo, education, experience, skills, projects
           if (!items || items.length === 0) return null;
           return (
             <div key={key} className="resume-section-spacing">
-              <SectionHeader title={ADDITIONAL_SECTION_LABELS[key] || key} />
-              <ul className="resume-list">
+              <SectionHeader title={ADDITIONAL_SECTION_LABELS[key]?.toUpperCase() || key.toUpperCase()} />
+              <ul className="resume-list !pl-4">
                 {items.map(item => (
                   <li key={item.id} className="resume-list-item">{item.name}</li>
                 ))}

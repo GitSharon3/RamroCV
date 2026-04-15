@@ -1,16 +1,16 @@
-import { useResumeStore } from '../store/resumeStore';
+import { useResumeStore } from '../../store/resumeStore';
 import { Download, Share2, Check, ZoomIn, ZoomOut } from 'lucide-react';
-import { downloadPDF, generateShareableLink } from '../utils/pdfExport';
+import { downloadPDF, generateShareableLink } from '../../utils/resumeUtils';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ATSClassic from '../templates/ATSClassic';
-import Astralis from '../templates/Astralis';
-import Celestial from '../templates/Celestial';
-import Lumina from '../templates/Lumina';
-import Zenith from '../templates/Zenith';
-import Horizon from '../templates/Horizon';
-import Nova from '../templates/Nova';
-import TemplateSwitcher from './TemplateSwitcher';
+import ATSClassic from '../../templates/ATSClassic';
+import Astralis from '../../templates/Astralis';
+import Celestial from '../../templates/Celestial';
+import Lumina from '../../templates/Lumina';
+import Zenith from '../../templates/Zenith';
+import Horizon from '../../templates/Horizon';
+import Nova from '../../templates/Nova';
+import { TemplateSwitcher } from '../builder/BuilderUI';
 
 const ResumePreview = ({ hideTemplateSwitcher, hideActionBar, initialZoom = 0.75 }) => {
   const { activeTemplate, sectionOrder, personalInfo, education, experience, skills, projects, additionalSections } = useResumeStore();

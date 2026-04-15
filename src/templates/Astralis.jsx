@@ -1,60 +1,58 @@
 import React, { memo } from 'react';
 import './template.css';
-import { ADDITIONAL_SECTION_LABELS } from '../constants/AdditionalSectionConstants';
+import { ADDITIONAL_SECTION_LABELS } from '../constants/resumeConstants';
 
 /**
  * Astralis Template
- * Features: Clean, modern structure with center-aligned headers and dotted dividers.
- * Best for: Professional general-purpose resumes.
+ * Features: Classic left-aligned structure with solid dividers.
+ * Based on: reference image template7.png
  */
 const Astralis = memo(({ personalInfo, education, experience, skills, projects, additionalSections }) => {
-  const fontFamily = "'Times New Roman', Times, serif";
+  const fontFamily = '"Times New Roman", Times, serif';
 
-  const renderSectionDivider = (title) => (
-    <div className="w-full bg-gray-50 py-1 mb-4 mt-6 text-center border-y border-gray-100">
-      <h2 className="uppercase font-bold tracking-widest text-[#1a1a1a] text-[13px]">{title}</h2>
+  const SectionHeader = ({ title }) => (
+    <div className="w-full mb-3 mt-6">
+      <h2 className="uppercase font-bold text-[#1a1a1a] text-[14px] leading-tight mb-1">{title}</h2>
+      <div className="w-full border-t border-gray-800"></div>
     </div>
   );
 
   return (
     <div className="resume-page-wrapper">
-      <div className="resume-a4-canvas pt-16 pb-12 px-14" style={{ fontFamily }}>
-        {/* Profile Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold uppercase tracking-tighter mb-2 text-gray-900 leading-none">
+      <div className="resume-a4-canvas pt-12 pb-12 px-14" style={{ fontFamily }}>
+        {/* Profile Header - Left Aligned as per template7.png */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">
             {personalInfo?.firstName} {personalInfo?.lastName}
           </h1>
-          {personalInfo?.title && <h2 className="text-[16px] font-medium mb-4 text-gray-600 tracking-wide underline underline-offset-4 decoration-gray-200">{personalInfo.title}</h2>}
+          {personalInfo?.title && (
+            <h2 className="text-[14px] font-bold text-gray-800 mb-4 tracking-tight">
+              {personalInfo.title}
+            </h2>
+          )}
 
-          <div className="resume-contact-info justify-center text-[12px] opacity-90">
-            <span>{[personalInfo?.address, personalInfo?.city, personalInfo?.country].filter(Boolean).join(', ')}</span>
-            {personalInfo?.email && (
-              <>
-                <div className="w-1 h-1 rounded-full bg-gray-300 mx-1"></div>
-                <span className="resume-break-all font-medium text-blue-900">{personalInfo.email}</span>
-              </>
-            )}
-            {personalInfo?.phone && (
-              <>
-                <div className="w-1 h-1 rounded-full bg-gray-300 mx-1"></div>
-                <span className="font-medium">{personalInfo.phone}</span>
-              </>
-            )}
-            {(personalInfo?.socialLinks || []).map((link, idx) => (
-              <React.Fragment key={idx}>
-                <div className="w-1 h-1 rounded-full bg-gray-300 mx-1"></div>
-                <span className="resume-break-all font-medium text-gray-700">{link.url}</span>
-              </React.Fragment>
-            ))}
+          <div className="flex justify-between items-baseline text-[12px] text-gray-800">
+            <div className="flex flex-col gap-0.5">
+              <span>{[personalInfo?.address, personalInfo?.city, personalInfo?.country].filter(Boolean).join(', ')}</span>
+              <span>{personalInfo?.phone}</span>
+            </div>
+            <div className="flex flex-col items-end gap-0.5 text-right">
+              {personalInfo?.email && <span className="resume-break-all">{personalInfo.email}</span>}
+              {(personalInfo?.socialLinks || []).map((link, idx) => (
+                <span key={idx} className="resume-break-all text-gray-700">
+                  {link.url}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="flex flex-col">
           {/* Summary */}
           {personalInfo?.summary && (
-            <div className="mb-6">
-              {renderSectionDivider('Profile')}
-              <p className="text-[13px] leading-relaxed text-gray-800 text-justify px-2">
+            <div className="resume-section-spacing">
+              <SectionHeader title="Summary" />
+              <p className="text-[13px] leading-relaxed text-gray-800 text-justify">
                 {personalInfo.summary}
               </p>
             </div>
@@ -62,22 +60,28 @@ const Astralis = memo(({ personalInfo, education, experience, skills, projects, 
 
           {/* Experience */}
           {experience && experience.length > 0 && (
-            <div className="mb-6">
-              {renderSectionDivider('Experience')}
-              <div className="space-y-6">
+            <div className="resume-section-spacing">
+              <SectionHeader title="Experience" />
+              <div className="space-y-5">
                 {experience.map((exp, idx) => (
-                  <div key={idx} className="px-2">
-                    <div className="resume-flex-between font-bold text-gray-900">
-                      <span className="text-[14px] uppercase">{exp.position}</span>
-                      <span className="text-[12px] tabular-nums">{exp.startDate} - {exp.endDate || 'Present'}</span>
+                  <div key={idx}>
+                    <div className="flex justify-between items-baseline mb-0.5">
+                      <span className="font-bold text-[14px] text-gray-900">
+                        {exp.position}
+                      </span>
+                      <span className="text-gray-700 text-[12px] font-medium">
+                        {exp.startDate} — {exp.endDate || 'Current'}
+                      </span>
                     </div>
-                    <div className="italic text-gray-700 mb-2 font-medium">
+                    <div className="text-gray-800 mb-2 font-medium italic text-[13px]">
                       {exp.company}{exp.location ? `, ${exp.location}` : ''}
                     </div>
                     {exp.description && (
-                      <ul className="resume-list px-1">
+                      <ul className="resume-list !pl-4 list-disc">
                         {exp.description.split('\n').filter(l => l.trim()).map((line, i) => (
-                          <li key={i} className="resume-list-item">{line.replace(/^[•*-]\s*/, '')}</li>
+                          <li key={i} className="resume-list-item text-justify">
+                            {line.replace(/^[•*-]\s*/, '')}
+                          </li>
                         ))}
                       </ul>
                     )}
@@ -89,54 +93,39 @@ const Astralis = memo(({ personalInfo, education, experience, skills, projects, 
 
           {/* Education */}
           {education && education.length > 0 && (
-            <div className="mb-6">
-              {renderSectionDivider('Education')}
-              <div className="space-y-4 px-2 text-[13px]">
+            <div className="resume-section-spacing">
+              <SectionHeader title="Education" />
+              <div className="space-y-4">
                 {education.map((edu, idx) => (
                   <div key={idx}>
-                    <div className="resume-flex-between font-bold">
-                      <span className="text-[#1a1a1a] uppercase">{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</span>
-                      <span className="text-gray-600 font-normal italic">{edu.startDate} - {edu.endDate || 'Present'}</span>
+                    <div className="flex justify-between items-baseline mb-0.5">
+                      <span className="font-bold text-gray-900 text-[14px]">
+                        {edu.school}{edu.location ? `, ${edu.location}` : ''}
+                      </span>
+                      <span className="text-gray-700 text-[12px] font-medium italic">
+                        {edu.startDate} — {edu.endDate || 'Present'}
+                      </span>
                     </div>
-                    <div className="text-gray-700 italic font-medium">{edu.school}{edu.location ? `, ${edu.location}` : ''}</div>
+                    <div className="text-gray-800 text-[13px]">
+                      {edu.degree}{edu.field ? ` in ${edu.field}` : ''}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Projects */}
-          {projects && projects.length > 0 && (
-            <div className="mb-6">
-              {renderSectionDivider('Projects')}
-              <div className="space-y-5 px-2">
-                {projects.map((proj, idx) => (
-                  <div key={idx}>
-                    <div className="resume-flex-between font-bold text-gray-900">
-                      <span className="uppercase text-[13px]">{proj.name}</span>
-                    </div>
-                    {proj.technologies && <div className="text-[11px] font-bold text-blue-800 mb-1 opacity-80">{proj.technologies}</div>}
-                    {proj.description && (
-                      <p className="text-[13px] leading-relaxed text-gray-700">{proj.description}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Skills with dotted lines */}
+          {/* Skills */}
           {skills && skills.length > 0 && (
-            <div className="mb-6">
-              {renderSectionDivider('Skills')}
-              <div className="grid grid-cols-2 gap-x-12 gap-y-3 px-2 text-[13px]">
+            <div className="resume-section-spacing">
+              <SectionHeader title="Skills" />
+              <ul className="resume-list !pl-4 list-disc grid grid-cols-1 gap-1">
                 {skills.map((skill, idx) => (
-                  <div key={idx} className="flex items-baseline w-full opacity-90">
-                    <span className="whitespace-nowrap pr-2 font-bold text-gray-800 uppercase tracking-tighter text-[11px]">{skill.name}</span>
-                    <div className="flex-grow border-b-[1px] border-dotted border-gray-400"></div>
-                  </div>
+                  <li key={idx} className="resume-list-item font-bold">
+                    {skill.name}
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           )}
 
@@ -144,16 +133,13 @@ const Astralis = memo(({ personalInfo, education, experience, skills, projects, 
           {additionalSections && Object.entries(additionalSections).map(([key, items]) => {
             if (!items || items.length === 0) return null;
             return (
-              <div key={key} className="mb-6">
-                {renderSectionDivider(ADDITIONAL_SECTION_LABELS[key] || key)}
-                <div className="grid grid-cols-2 gap-x-12 gap-y-2 px-2 text-[13px]">
+              <div key={key} className="resume-section-spacing">
+                <SectionHeader title={ADDITIONAL_SECTION_LABELS[key] || key} />
+                <ul className="resume-list !pl-4 list-disc">
                   {items.map(item => (
-                    <div key={item.id} className="flex items-baseline w-full">
-                      <span className="whitespace-nowrap pr-2 font-medium">{item.name}</span>
-                      <div className="flex-grow border-b-[0.5px] border-dotted border-gray-300"></div>
-                    </div>
+                    <li key={item.id} className="resume-list-item">{item.name}</li>
                   ))}
-                </div>
+                </ul>
               </div>
             );
           })}
