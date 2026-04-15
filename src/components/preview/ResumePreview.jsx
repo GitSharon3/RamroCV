@@ -121,13 +121,15 @@ const ResumePreview = ({ hideTemplateSwitcher, hideActionBar, initialZoom = 0.75
         style={{ minHeight: hideActionBar ? '500px' : '600px' }}>
         <div className="flex justify-center items-start min-h-full p-4 md:p-6">
           <div
+            id="resume-preview"
             style={{
               transform: `scale(${zoom})`,
               transformOrigin: 'top center',
               width: '210mm',
               maxWidth: '100%',
+              backgroundColor: 'white',
               boxShadow: '0 8px 40px rgba(0,0,0,0.2)',
-              borderRadius: '4px',
+              borderRadius: '2px',
               overflow: 'hidden',
               marginBottom: zoom < 1 ? `calc((1 - ${zoom}) * -297mm)` : '20px',
             }}

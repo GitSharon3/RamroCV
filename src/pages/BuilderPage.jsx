@@ -141,20 +141,81 @@ const EditResumeStep = () => (
  * Step 3: Download
  */
 const DownloadResumeStep = () => {
-  const { activeTemplate, setActiveTemplate } = useResumeStore();
-  const templateNames = { 'celestial': 'Celestial', 'ats-classic': 'ATS Classic', 'astralis': 'Astralis', 'lumina': 'Lumina', 'zenith': 'Zenith', 'horizon': 'Horizon', 'nova': 'Nova' };
+  const { activeTemplate, setActiveTemplate, personalInfo, education, experience, skills, projects, additionalSections } = useResumeStore();
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  
+  const templateNames = { 
+    'celestial': 'Celestial', 
+    'ats-classic': 'ATS Classic', 
+    'astralis': 'Astralis', 
+    'lumina': 'Lumina', 
+    'zenith': 'Zenith', 
+    'horizon': 'Horizon', 
+    'nova': 'Nova' 
+  };
+
+  const handleDownload = async () => {
+    const { downloadPDF } = await import('../utils/resumeUtils');
+    setIsDownloading(true);
+    try {
+      await downloadPDF('resume-preview', `${personalInfo.firstName || 'my'}-resume.pdf`);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const { generateShareableLink } = await import('../utils/resumeUtils');
+    setIsSharing(true);
+    const link = generateShareableLink({ personalInfo, education, experience, skills, projects, additionalSections, activeTemplate });
+    try {
+      await navigator.clipboard.writeText(link);
+      alert('Link copied to clipboard!');
+    } catch {
+      prompt('Copy this link:', link);
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full">
       <div className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-180px)] min-h-[600px]">
-        <div className="xl:w-64 w-full flex-shrink-0 bg-white rounded-2xl border shadow-sm p-4 flex flex-col"><VerticalTemplateSwitcher /></div>
-        <div className="flex-1 min-w-0 bg-white rounded-2xl border shadow-sm overflow-hidden flex flex-col"><ResumePreview hideTemplateSwitcher hideActionBar initialZoom={0.95} /></div>
+        <div className="xl:w-64 w-full flex-shrink-0 bg-white rounded-2xl border shadow-sm p-4 flex flex-col">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 px-2">Switch Style</h3>
+          <VerticalTemplateSwitcher />
+        </div>
+        <div className="flex-1 min-w-0 bg-white rounded-2xl border shadow-sm overflow-hidden flex flex-col">
+          <ResumePreview hideTemplateSwitcher hideActionBar initialZoom={0.8} />
+        </div>
         <div className="xl:w-64 w-full flex-shrink-0">
-          <div className="bg-white rounded-2xl p-5 border shadow-sm sticky top-4">
-            <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3"><FileCheck size={24} /></div>
-            <h2 className="text-lg font-bold text-gray-900 mb-1 text-center">Ready!</h2>
-            <button onClick={() => document.getElementById('download-pdf-btn')?.click()} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all"><DownloadIcon size={16} /> Download PDF</button>
-            <button onClick={() => document.getElementById('share-link-btn')?.click()} className="w-full py-2.5 mt-2 bg-gray-100 text-gray-700 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-200 transition-all"><Share2 size={14} /> Share Link</button>
+          <div className="bg-white rounded-2xl p-6 border shadow-sm sticky top-4">
+            <div className="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+              <FileCheck size={28} />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-1 text-center">Resume Ready!</h2>
+            <p className="text-xs text-gray-500 text-center mb-6">Your resume is polished and ready for your next big role.</p>
+            
+            <button 
+              onClick={handleDownload} 
+              disabled={isDownloading}
+              className={`w-full py-3.5 ${isDownloading ? 'bg-gray-100' : 'bg-emerald-500 hover:bg-emerald-600'} text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm shadow-emerald-100 mb-3`}
+            >
+              {isDownloading ? (
+                <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <DownloadIcon size={18} />
+              )}
+              {isDownloading ? 'Processing...' : 'Download PDF'}
+            </button>
+            
+            <button 
+              onClick={handleShare} 
+              className="w-full py-3 bg-gray-50 text-gray-700 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-100 transition-all border border-gray-100"
+            >
+              <Share2 size={16} /> Share Link
+            </button>
           </div>
         </div>
       </div>
@@ -198,7 +259,7 @@ const BuilderPage = () => {
     return configs[wizardStep] || configs[1];
   }, [wizardStep]);
 
-  const CurrentStepComponent = () => {
+  const renderStep = () => {
     if (location.pathname.includes('choose')) return <ChooseTemplateStep />;
     if (location.pathname.includes('details')) return <EditResumeStep />;
     if (location.pathname.includes('download')) return <DownloadResumeStep />;
@@ -232,8 +293,14 @@ const BuilderPage = () => {
 
       <main className="builder-main">
         <AnimatePresence mode="wait">
-          <motion.div key={location.pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="builder-main__content">
-            <CurrentStepComponent />
+          <motion.div 
+            key={location.pathname} 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: -10 }} 
+            className="builder-main__content"
+          >
+            {renderStep()}
           </motion.div>
         </AnimatePresence>
       </main>

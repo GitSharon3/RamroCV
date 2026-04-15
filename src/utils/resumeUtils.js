@@ -4,91 +4,64 @@ import html2canvas from 'html2canvas';
 export const downloadPDF = async (elementId = 'resume-preview', filename = 'resume.pdf') => {
   const element = document.getElementById(elementId);
   if (!element) {
-    console.error('Resume element not found');
-    alert('Could not find the resume to export. Please try again.');
+    console.error('Resume element not found:', elementId);
+    alert('Export Error: Could not find the resume container. Please try refreshing.');
     return;
   }
 
   try {
-    // Temporarily remove transform scale for capture
-    const parent = element.parentElement;
-    const originalTransform = parent?.style.transform || '';
-    const originalTransformOrigin = parent?.style.transformOrigin || '';
-    if (parent) {
-      parent.style.transform = 'none';
-      parent.style.transformOrigin = 'unset';
-    }
-
-    await new Promise((r) => setTimeout(r, 100)); // Let styles settle
+    console.log('PDF: Starting high-fidelity capture...');
+    
+    // Allow any pending React/Framer renders to settle
+    await new Promise(r => setTimeout(r, 450));
 
     const canvas = await html2canvas(element, {
-      scale: 3,           // High DPI for crisp text
+      scale: 2, // 2x is plenty for high quality without crashing memory
       useCORS: true,
+      allowTaint: false,
       logging: false,
       backgroundColor: '#ffffff',
-      allowTaint: true,
-      imageTimeout: 0,
-      removeContainer: false,
+      onclone: (clonedDoc) => {
+        // Enforce scale 1 on the clone specifically for capture
+        const clonedElement = clonedDoc.getElementById(elementId);
+        if (clonedElement) {
+          clonedElement.style.transform = 'none';
+          clonedElement.style.transformOrigin = 'unset';
+          clonedElement.style.width = '210mm';
+        }
+      }
     });
 
-    // Restore transform
-    if (parent) {
-      parent.style.transform = originalTransform;
-      parent.style.transformOrigin = originalTransformOrigin;
-    }
-
-    const imgData = canvas.toDataURL('image/png', 1.0);
-
-    // A4: 210 x 297 mm
-    const PDF_WIDTH_MM = 210;
-    const PDF_HEIGHT_MM = 297;
-
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4',
-      compress: false,
+      compress: true
     });
 
-    const canvasWidthPx = canvas.width;
-    const canvasHeightPx = canvas.height;
+    const imgWidth = 210; // A4 width in mm
+    const pageHeight = 297; // A4 height in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+    let heightLeft = imgHeight;
+    let position = 0;
 
-    // Scale to fit A4 width exactly
-    const scaleRatio = PDF_WIDTH_MM / canvasWidthPx;
-    const imgHeightMM = canvasHeightPx * scaleRatio;
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
 
-    // Handle multi-page if content exceeds A4 height
-    let remainingHeight = imgHeightMM;
-    let yOffset = 0;
-    let page = 0;
-
-    while (remainingHeight > 0) {
-      if (page > 0) pdf.addPage();
-
-      const sliceHeightMM = Math.min(PDF_HEIGHT_MM, remainingHeight);
-      const sliceHeightPx = sliceHeightMM / scaleRatio;
-
-      // Create a cropped canvas for this page
-      const pageCanvas = document.createElement('canvas');
-      pageCanvas.width = canvasWidthPx;
-      pageCanvas.height = Math.ceil(sliceHeightPx);
-      const ctx = pageCanvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-      ctx.drawImage(canvas, 0, yOffset, canvasWidthPx, Math.ceil(sliceHeightPx), 0, 0, canvasWidthPx, Math.ceil(sliceHeightPx));
-
-      const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
-      pdf.addImage(pageImgData, 'PNG', 0, 0, PDF_WIDTH_MM, sliceHeightMM);
-
-      yOffset += Math.ceil(sliceHeightPx);
-      remainingHeight -= PDF_HEIGHT_MM;
-      page++;
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
     }
 
     pdf.save(filename);
+    console.log('PDF Downloaded successfully');
   } catch (error) {
-    console.error('Error generating PDF:', error);
-    alert('Error generating PDF. Please try again.\n\n' + error.message);
+    console.error('CRITICAL: PDF Generation failed', error);
+    alert('Oops! We encountered an error generating your PDF. Please try a different browser or check your internet connection.');
   }
 };
 
