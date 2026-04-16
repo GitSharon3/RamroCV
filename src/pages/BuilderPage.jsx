@@ -69,36 +69,50 @@ class StepErrorBoundary extends React.Component {
  */
 const ChooseTemplateStep = () => {
   const [tab, setTab] = useState('template');
-  const { activeTemplate, loadSampleData } = useResumeStore();
+  const { activeTemplate, setActiveTemplate, loadSampleData } = useResumeStore();
   const navigate = useNavigate();
 
+  const handleStartBuilding = () => {
+    // Auto-select first template if none selected
+    if (!activeTemplate) {
+      setActiveTemplate('modern');
+    }
+    navigate('/builder/details');
+  };
+
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto">
-      <div className="text-center py-8 sm:py-12">
-        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">Start your resume</h1>
-        <p className="text-gray-500 mb-8 max-w-xl mx-auto">Pick a design or import existing LaTeX code.</p>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto">
+      <div className="text-center py-4 sm:py-6">
+        {/* Simple CTA Button at Top */}
+        <motion.button 
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleStartBuilding} 
+          className="choose-template__simple-btn"
+        >
+          <ArrowRight size={20} />
+          Enter Details
+        </motion.button>
         
-        <div className="flex justify-center mb-8">
-          <div className="choose-template__tabs">
+        {/* Tab Switcher */}
+        <div className="flex justify-center my-4">
+          <div className="choose-template__tabs choose-template__tabs--compact">
             {['template', 'latex'].map(t => (
               <button key={t} onClick={() => setTab(t)} className={`choose-template__tab ${tab === t ? 'choose-template__tab--active' : ''}`}>
-                {t === 'template' ? 'Choose a Design' : 'Import LaTeX'}
+                {t === 'template' ? 'Templates' : 'Import LaTeX'}
               </button>
             ))}
             <div className="choose-template__tab-indicator" style={{ transform: tab === 'template' ? 'translateX(0)' : 'translateX(100%)' }} />
           </div>
         </div>
 
-        <div className="min-h-[450px]">
+        <div className="min-h-[300px]">
           <AnimatePresence mode="wait">
             {tab === 'template' ? (
               <motion.div key="tpl" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                 <TemplateSwitcher />
-                {activeTemplate && (
-                  <button onClick={() => navigate('/builder/details')} className="choose-template__bottom-next-btn mt-8">
-                    Continue to Details <ArrowRight size={18} />
-                  </button>
-                )}
               </motion.div>
             ) : (
               <motion.div key="ltx" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
