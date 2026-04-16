@@ -120,7 +120,8 @@ const ResumePreview = ({ hideTemplateSwitcher, hideActionBar, initialZoom = 0.75
       <div className="bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl overflow-auto flex-1 relative"
         style={{ minHeight: hideActionBar ? '500px' : '600px' }}>
         <div className="flex justify-center items-start min-h-full p-4 md:p-6">
-          <div
+          <motion.div
+            layout
             id="resume-preview"
             style={{
               transform: `scale(${zoom})`,
@@ -134,8 +135,18 @@ const ResumePreview = ({ hideTemplateSwitcher, hideActionBar, initialZoom = 0.75
               marginBottom: zoom < 1 ? `calc((1 - ${zoom}) * -297mm)` : '20px',
             }}
           >
-            <TemplateComponent {...resumeData} />
-          </div>
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={activeTemplate}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <TemplateComponent {...resumeData} />
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
         </div>
       </div>
     </div>

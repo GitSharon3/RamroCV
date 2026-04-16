@@ -100,6 +100,11 @@ export const useResumeStore = create(
           education: state.education.filter((edu) => edu.id !== id),
         })),
 
+      reorderEducation: (newEducation) =>
+        set(() => ({
+          education: newEducation,
+        })),
+
       addExperience: (experience) =>
         set((state) => ({
           experience: [...state.experience, { ...experience, id: Date.now() }],
@@ -115,6 +120,11 @@ export const useResumeStore = create(
       removeExperience: (id) =>
         set((state) => ({
           experience: state.experience.filter((exp) => exp.id !== id),
+        })),
+
+      reorderExperience: (newExperience) =>
+        set(() => ({
+          experience: newExperience,
         })),
 
       addSkill: (skill) =>

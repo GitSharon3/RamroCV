@@ -16,7 +16,11 @@ import {
   FileText,
   Layout,
   Award,
-  ArrowUpRight
+  ArrowUpRight,
+  ChevronLeft,
+  MousePointerClick,
+  Rocket,
+  Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResumeStore } from '../store/resumeStore';
@@ -74,10 +78,24 @@ const navItems = [
 // ============================================
 // LANDING PAGE COMPONENT
 // ============================================
+const TEMPLATE_CATEGORIES = ['All', 'ATS', 'Modern', 'Creative', 'Executive'];
+
+const ALL_TEMPLATES = [
+  { img: null, imgKey: 'template4', id: 'ats-classic', name: 'ATS Classic', desc: 'Professional Monochrome', tag: 'ATS', popular: true },
+  { img: null, imgKey: 'template5', id: 'horizon', name: 'Horizon', desc: 'Minimalist Framed', tag: 'Modern', popular: false },
+  { img: null, imgKey: 'template6', id: 'nova', name: 'Nova', desc: 'Bold Impact Photo', tag: 'Creative', popular: true },
+  { img: null, imgKey: 'template1', id: 'celestial', name: 'Celestial', desc: 'Refined Neutral Tones', tag: 'Executive', popular: false },
+  { img: null, imgKey: 'template3', id: 'lumina', name: 'Lumina', desc: 'Modern 2-Column', tag: 'Modern', popular: false },
+  { img: null, imgKey: 'template7', id: 'astralis', name: 'Astralis', desc: 'Classic ATS Proof', tag: 'ATS', popular: false },
+  { img: null, imgKey: 'template2', id: 'zenith', name: 'Zenith', desc: 'Elegant Executive', tag: 'Executive', popular: false },
+];
+
 const LandingPage = () => {
   const { setActiveTemplate } = useResumeStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [hoveredTemplate, setHoveredTemplate] = useState(null);
 
   // Handle scroll effect for navbar
   useEffect(() => {
@@ -97,6 +115,10 @@ const LandingPage = () => {
     }
     setMobileMenuOpen(false);
   };
+
+  const filteredTemplates = activeCategory === 'All'
+    ? ALL_TEMPLATES
+    : ALL_TEMPLATES.filter(t => t.tag === activeCategory);
 
   return (
     <div className="landing-page">
@@ -434,70 +456,102 @@ const LandingPage = () => {
               and designer layouts. Find the perfect architecture to showcase your career trajectory.
             </p>
           </motion.div>
+
+          {/* Category Filter Tabs */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="templates__filters"
+          >
+            {TEMPLATE_CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                className={`templates__filter-btn ${activeCategory === cat ? 'templates__filter-btn--active' : ''}`}
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </motion.div>
         </div>
 
         {/* Template Showcase */}
         <div className="templates__showcase">
           <div className="templates__grid">
-            {[
-              { img: template4, id: 'ats-classic', name: 'ATS Classic', desc: 'Professional Monochrome' },
-              { img: template5, id: 'horizon', name: 'Horizon', desc: 'Minimalist Framed' },
-              { img: template6, id: 'nova', name: 'Nova', desc: 'Bold Impact Photo' },
-              { img: template1, id: 'celestial', name: 'Celestial', desc: 'Refined Neutral Tones' },
-              { img: template3, id: 'lumina', name: 'Lumina', desc: 'Modern 2-Column' },
-              { img: template7, id: 'astralis', name: 'Astralis', desc: 'Classic ATS Proof' },
-              { img: template2, id: 'zenith', name: 'Zenith', desc: 'Elegant Executive' },
-            ].map((tpl) => (
-              <div key={`template-${tpl.id}`} className="templates__card">
-                {/* Image & Hover Container */}
-                <div className="templates__card-image-wrapper">
-                  <img src={tpl.img} alt={tpl.name} className="templates__card-image" />
-                  
-                  {/* Hover Overlay */}
-                  <div className="templates__card-overlay">
-                    {/* Floating Template Badge */}
-                    <div className="templates__card-badge">
-                      <span>{tpl.name}</span>
+            {filteredTemplates.map((tpl) => {
+              const imgMap = {
+                template1, template2, template3, template4, template5, template6, template7,
+              };
+              const img = imgMap[tpl.imgKey];
+              return (
+                <div
+                  key={`template-${tpl.id}`}
+                  className={`templates__card ${hoveredTemplate === tpl.id ? 'templates__card--hovered' : ''}`}
+                  onMouseEnter={() => setHoveredTemplate(tpl.id)}
+                  onMouseLeave={() => setHoveredTemplate(null)}
+                >
+                  {/* Popular badge */}
+                  {tpl.popular && (
+                    <div className="templates__card-popular">
+                      <Star size={10} fill="currentColor" />
+                      Popular
                     </div>
+                  )}
 
-                    {/* Main CTA Button */}
-                    <Link 
-                      to="/builder/details" 
-                      onClick={() => setActiveTemplate(tpl.id)}
-                      className="templates__card-cta"
-                    >
-                      <Sparkles size={18} />
-                      Use This Template
-                    </Link>
-
-                    {/* Subtitle */}
-                    <div className="templates__card-desc">
-                      <p>{tpl.desc}</p>
+                  {/* Image & Hover Container */}
+                  <div className="templates__card-image-wrapper">
+                    <img src={img} alt={tpl.name} className="templates__card-image" />
+                    
+                    {/* Hover Overlay */}
+                    <div className="templates__card-overlay">
+                      {/* Main CTA Button */}
+                      <Link 
+                        to="/builder/details" 
+                        onClick={() => setActiveTemplate(tpl.id)}
+                        className="templates__card-cta"
+                      >
+                        <MousePointerClick size={16} />
+                        Use This Template
+                      </Link>
                     </div>
                   </div>
+
+                  {/* Always-visible card footer */}
+                  <div className="templates__card-footer">
+                    <div className="templates__card-footer-left">
+                      <div className="templates__card-name">{tpl.name}</div>
+                      <div className="templates__card-desc-label">{tpl.desc}</div>
+                    </div>
+                    <span className="templates__card-tag">{tpl.tag}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
-          {/* Scroll Indicator */}
-          <div className="templates__scroll-indicator">
-            <div className="templates__scroll-bar">
-              <motion.div 
-                className="templates__scroll-progress"
-                animate={{ x: [-128, 128] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              />
-            </div>
-            <span className="templates__scroll-text">Scroll horizontally to explore</span>
-            <div className="templates__scroll-bar">
-              <motion.div 
-                className="templates__scroll-progress"
-                animate={{ x: [-128, 128] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
-              />
-            </div>
-          </div>
+          {/* Scroll Hint */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+            className="templates__scroll-hint"
+          >
+            <ChevronLeft size={14} className="templates__scroll-hint-icon" />
+            <span>Scroll to explore all templates</span>
+            <ArrowRight size={14} className="templates__scroll-hint-icon" />
+          </motion.div>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="templates__bottom-cta">
+          <Link to="/builder/choose" className="templates__browse-btn">
+            <Layout size={18} />
+            Browse All Templates
+            <ArrowUpRight size={16} />
+          </Link>
         </div>
       </section>
 
@@ -602,7 +656,27 @@ const LandingPage = () => {
           FOOTER SECTION
           ============================================ */}
       <footer className="footer">
+        {/* Footer Stats Strip */}
+        <div className="footer__stats-strip">
+          <div className="footer__stats-strip-inner">
+            {[
+              { icon: Users, value: '50K+', label: 'Resumes Created' },
+              { icon: Rocket, value: '3 min', label: 'Avg. Build Time' },
+              { icon: Globe, value: '7', label: 'Premium Templates' },
+              { icon: CheckCircle, value: '100%', label: 'ATS Compatible' },
+            ].map(({ icon: Icon, value, label }) => (
+              <div key={label} className="footer__stat-item">
+                <Icon size={18} className="footer__stat-icon" />
+                <span className="footer__stat-value">{value}</span>
+                <span className="footer__stat-sep">·</span>
+                <span className="footer__stat-label">{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="footer__container">
+          {/* Main Footer Grid */}
           <div className="footer__grid">
             {/* Brand Column */}
             <div className="footer__brand">
@@ -613,21 +687,25 @@ const LandingPage = () => {
                 </span>
               </Link>
               <p className="footer__tagline">
-                The easiest way to build a professional, ATS-friendly resume that lands you interviews. No login required.
+                The easiest way to build a professional, ATS-friendly resume that lands you interviews — completely free. No sign-up, no credit card.
               </p>
+              <Link to="/builder/choose" className="footer__cta-mini">
+                Start Building Free
+                <ArrowUpRight size={14} />
+              </Link>
               <div className="footer__social">
                 <a href="#" className="footer__social-link" aria-label="Twitter">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                   </svg>
                 </a>
                 <a href="#" className="footer__social-link" aria-label="LinkedIn">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                   </svg>
                 </a>
                 <a href="#" className="footer__social-link" aria-label="GitHub">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
                     <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
                   </svg>
                 </a>
@@ -637,10 +715,10 @@ const LandingPage = () => {
             {/* Links Columns */}
             <div className="footer__links">
               <span className="footer__links-title">Product</span>
-              <a href="#templates" className="footer__link">Templates</a>
-              <a href="#features" className="footer__link">Features</a>
-              <a href="#how-it-works" className="footer__link">How It Works</a>
-              <Link to="/builder/choose" className="footer__link">Start Building</Link>
+              <a href="#templates" onClick={(e) => handleNavClick(e, '#templates')} className="footer__link">Templates</a>
+              <a href="#features" onClick={(e) => handleNavClick(e, '#features')} className="footer__link">Features</a>
+              <a href="#how-it-works" onClick={(e) => handleNavClick(e, '#how-it-works')} className="footer__link">How It Works</a>
+              <Link to="/builder/choose" className="footer__link footer__link--highlight">Start Building →</Link>
             </div>
 
             <div className="footer__links">
@@ -656,6 +734,7 @@ const LandingPage = () => {
               <a href="#" className="footer__link">Privacy Policy</a>
               <a href="#" className="footer__link">Terms of Service</a>
               <a href="#" className="footer__link">Cookie Policy</a>
+              <a href="#" className="footer__link">Accessibility</a>
             </div>
           </div>
 
@@ -664,8 +743,18 @@ const LandingPage = () => {
             <p className="footer__copyright">
               © {new Date().getFullYear()} RamroCV. All rights reserved.
             </p>
+            <div className="footer__bottom-center">
+              <span className="footer__ats-badge">
+                <CheckCircle size={12} />
+                ATS Optimized
+              </span>
+              <span className="footer__privacy-badge">
+                <Shield size={12} />
+                Privacy First
+              </span>
+            </div>
             <div className="footer__made-with">
-              Made with <Heart size={14} /> by <span className="footer__author">Sharon</span>
+              Made with <Heart size={13} fill="currentColor" /> by <span className="footer__author">Sharon</span>
             </div>
           </div>
         </div>

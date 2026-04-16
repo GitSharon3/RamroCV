@@ -15,7 +15,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 // Consolidated Components
 import { StepIndicator, TemplateSwitcher, VerticalTemplateSwitcher } from '../components/builder/BuilderUI';
-import ResumeFormEditor from '../components/builder/ResumeFormEditor';
+import ResumeFormEditor, { LatexImporter } from '../components/builder/ResumeFormEditor';
 import ResumePreview from '../components/preview/ResumePreview';
 
 // Styles & Assets

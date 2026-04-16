@@ -36,7 +36,24 @@ import {
   EyeOff,
   CheckCircle2
 } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useResumeStore } from '../../store/resumeStore';
+import { parseLatex } from '../../utils/latexParser';
 const SECTION_TYPES = [
   { id: 'languages', label: 'Languages' },
   { id: 'certifications', label: 'Certifications and licenses' },
@@ -48,173 +65,38 @@ const SECTION_TYPES = [
 ];
 
 // ============================================
+// SHARED UI COMPONENTS
+// ============================================
+
+const AutoResizeTextarea = ({ value, onChange, placeholder, rows = 1, className, onBlur }) => {
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      placeholder={placeholder}
+      rows={rows}
+      style={{ overflow: 'hidden' }}
+      className={`transition-all duration-200 ${className}`}
+    />
+  );
+};
+
+// ============================================
 // LATEX PARSER LOGIC
 // ============================================
 
-const parseLatex = (latex) => {
-  const result = {
-    personalInfo: {},
-    experience: [],
-    education: [],
-    skills: [],
-    projects: [],
-    errors: [],
-    warnings: [],
-  };
-
-  if (!latex || latex.trim().length === 0) {
-    result.errors.push('LaTeX input is empty.');
-    return result;
-  }
-
-  const extract = (pattern, text, group = 1) => {
-    const m = text.match(pattern);
-    return m ? m[group].trim() : null;
-  };
-
-  result.personalInfo.firstName =
-    extract(/\\firstname\s*\{([^}]+)\}/, latex) ||
-    extract(/\\name\s*\{([^}]+)\}\s*\{[^}]*\}/, latex) || '';
-
-  result.personalInfo.lastName =
-    extract(/\\familyname\s*\{([^}]+)\}/, latex) ||
-    extract(/\\name\s*\{[^}]*\}\s*\{([^}]+)\}/, latex) || '';
-
-  if (!result.personalInfo.firstName && !result.personalInfo.lastName) {
-    const author = extract(/\\author\s*\{([^}]+)\}/, latex);
-    if (author) {
-      const parts = author.split(' ');
-      result.personalInfo.firstName = parts[0] || '';
-      result.personalInfo.lastName = parts.slice(1).join(' ') || '';
-    }
-  }
-
-  result.personalInfo.email =
-    extract(/\\email\s*\{([^}]+)\}/, latex) ||
-    extract(/\\href\{mailto:([^}]+)\}/, latex) || '';
-
-  result.personalInfo.phone =
-    extract(/\\phone(?:\[mobile\])?\s*\{([^}]+)\}/, latex) ||
-    extract(/\\mobile\s*\{([^}]+)\}/, latex) || '';
-
-  result.personalInfo.title =
-    extract(/\\position\s*\{([^}]+)\}/, latex) ||
-    extract(/\\title\s*\{([^}]+)\}/, latex) || '';
-
-  result.personalInfo.website =
-    extract(/\\homepage\s*\{([^}]+)\}/, latex) ||
-    extract(/\\href\{https?:\/\/([^}]+)\}/, latex) || '';
-
-  result.personalInfo.linkedin =
-    extract(/\\linkedin\s*\{([^}]+)\}/, latex) ||
-    extract(/linkedin\.com\/in\/([^\s,}]+)/, latex) || '';
-
-  result.personalInfo.github =
-    extract(/\\github\s*\{([^}]+)\}/, latex) ||
-    extract(/github\.com\/([^\s,}]+)/, latex) || '';
-
-  result.personalInfo.city = extract(/\\address\s*\{([^}]+)\}/, latex) || '';
-
-  const summaryMatch = latex.match(/\\section\s*\{(?:Summary|Profile|About|Objective)[^}]*\}([\s\S]*?)(?=\\section|\\end\{document\})/i);
-  if (summaryMatch) {
-    result.personalInfo.summary = summaryMatch[1]
-      .replace(/\\[a-z]+\{[^}]*\}/g, '')
-      .replace(/\\[a-z]+/g, '')
-      .replace(/[{}]/g, '')
-      .replace(/\n\s*\n/g, ' ')
-      .trim()
-      .substring(0, 500);
-  }
-
-  const experienceSection = latex.match(/\\section\s*\{(?:Experience|Work Experience|Employment)[^}]*\}([\s\S]*?)(?=\\section|\\end\{document\})/i);
-  if (experienceSection) {
-    const sectionText = experienceSection[1];
-    const cvEntries = [...sectionText.matchAll(/\\cventry\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}/g)];
-    cvEntries.forEach((m, idx) => {
-      const [, dates, title, company, location, , desc] = m;
-      const [start, end] = dates.includes('--') ? dates.split('--').map(s => s.trim()) : [dates, 'Present'];
-      result.experience.push({
-        id: Date.now() + idx,
-        position: title.trim(),
-        company: company.trim(),
-        location: location.trim(),
-        startDate: start,
-        endDate: end,
-        description: desc.replace(/\\item\s*/g, '• ').replace(/\\[a-z]+\{[^}]*\}/g, '').replace(/[{}\\]/g, '').trim(),
-      });
-    });
-
-    if (cvEntries.length === 0) {
-      const items = [...sectionText.matchAll(/\\item\s*(.+)/g)];
-      if (items.length > 0) {
-        result.warnings.push('Experience parsed in simplified mode — review the output.');
-        items.slice(0, 5).forEach((m, idx) => {
-          result.experience.push({
-            id: Date.now() + idx + 1000,
-            position: m[1].replace(/\\[a-z]+\{[^}]*\}/g, '').replace(/[{}]/g, '').trim().substring(0, 80),
-            company: '', location: '', startDate: '', endDate: '', description: '',
-          });
-        });
-      }
-    }
-  }
-
-  const educationSection = latex.match(/\\section\s*\{(?:Education|Academic)[^}]*\}([\s\S]*?)(?=\\section|\\end\{document\})/i);
-  if (educationSection) {
-    const sectionText = educationSection[1];
-    const cvEntries = [...sectionText.matchAll(/\\cventry\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}/g)];
-    cvEntries.forEach((m, idx) => {
-      const [, dates, degree, school, location, , desc] = m;
-      const [start, end] = dates.includes('--') ? dates.split('--').map(s => s.trim()) : [dates, ''];
-      result.education.push({
-        id: Date.now() + idx + 2000,
-        school: school.trim(),
-        degree: degree.trim(),
-        field: '',
-        startDate: start,
-        endDate: end,
-        location: location.trim(),
-        description: desc.replace(/[{}\\]/g, '').trim(),
-      });
-    });
-
-    if (cvEntries.length === 0) {
-      const edItems = [...sectionText.matchAll(/\\item\s*(.+)/g)];
-      edItems.slice(0, 3).forEach((m, idx) => {
-        result.education.push({
-          id: Date.now() + idx + 3000,
-          school: m[1].replace(/[{}\\]/g, '').trim().substring(0, 80),
-          degree: '', field: '', startDate: '', endDate: '', description: '',
-        });
-      });
-    }
-  }
-
-  const skillsSection = latex.match(/\\section\s*\{(?:Skills?|Technical Skills?|Competencies)[^}]*\}([\s\S]*?)(?=\\section|\\end\{document\})/i);
-  if (skillsSection) {
-    const sectionText = skillsSection[1];
-    const cleaned = sectionText.replace(/\\cvitem\s*\{[^}]*\}\s*\{([^}]*)\}/g, '$1').replace(/\\item\s*/g, '').replace(/\\[a-z]+(\[[^\]]*\])?\{[^}]*\}/g, '').replace(/[{}\\]/g, '').replace(/\n/g, ',');
-    const skillNames = cleaned.split(/[,;|•]/).map(s => s.trim()).filter(s => s.length > 1 && s.length < 40 && !/^\d+$/.test(s));
-    skillNames.slice(0, 20).forEach((name, idx) => {
-      result.skills.push({ id: Date.now() + idx + 4000, name, level: '', category: '' });
-    });
-  }
-
-  const projectsSection = latex.match(/\\section\s*\{(?:Projects?|Personal Projects?|Side Projects?)[^}]*\}([\s\S]*?)(?=\\section|\\end\{document\})/i);
-  if (projectsSection) {
-    const sectionText = projectsSection[1];
-    const projEntries = [...sectionText.matchAll(/\\cventry\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}/g)];
-    projEntries.forEach((m, idx) => {
-      const [, , name, , , , desc] = m;
-      result.projects.push({ id: Date.now() + idx + 5000, name: name.trim(), description: desc.replace(/[{}\\]/g, '').trim(), technologies: '', link: '' });
-    });
-  }
-
-  if (Object.values(result.personalInfo).every(v => !v)) {
-    result.errors.push('Could not detect personal information.');
-  }
-  return result;
-};
+// LaTeX parser logic has been extracted to src/utils/latexParser.js
 
 const SAMPLE_LATEX = `\\documentclass[11pt,a4paper]{moderncv}
 \\moderncvtheme{classic}
@@ -254,7 +136,7 @@ Passionate full stack developer with 4 years of experience building scalable web
 /**
  * LatexImporter - Internalized LaTeX parser UI
  */
-const LatexImporter = ({ onImported }) => {
+export const LatexImporter = ({ onImported }) => {
   const { loadParsedData } = useResumeStore();
   const [latexInput, setLatexInput] = useState('');
   const [parseResult, setParseResult] = useState(null);
@@ -264,13 +146,17 @@ const LatexImporter = ({ onImported }) => {
 
   const handleParse = () => {
     if (!latexInput.trim()) return;
-    const result = parseLatex(latexInput);
-    setParseResult(result);
-    setIsImported(false);
+    try {
+      const result = parseLatex(latexInput);
+      setParseResult(result);
+      setIsImported(false);
+    } catch (e) {
+      setParseResult({ errors: ['Failed completely to parse this document: ' + e.message] });
+    }
   };
 
   const handleImport = () => {
-    if (!parseResult) return;
+    if (!parseResult || parseResult.errors?.length > 0) return;
     loadParsedData(parseResult);
     setIsImported(true);
     if (onImported) onImported();
@@ -286,11 +172,11 @@ const LatexImporter = ({ onImported }) => {
 
   const handleLoadSample = () => { setLatexInput(SAMPLE_LATEX); setParseResult(null); setIsImported(false); };
 
-  const hasData = parseResult && (
-    Object.values(parseResult.personalInfo).some(v => v) ||
-    parseResult.experience.length > 0 ||
-    parseResult.education.length > 0 ||
-    parseResult.skills.length > 0
+  const hasData = parseResult && !parseResult.errors?.length && (
+    Object.values(parseResult.personalInfo || {}).some(v => v) ||
+    (parseResult.experience || []).length > 0 ||
+    (parseResult.education || []).length > 0 ||
+    (parseResult.skills || []).length > 0
   );
 
   return (
@@ -329,11 +215,16 @@ const LatexImporter = ({ onImported }) => {
 
       {parseResult && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          {parseResult.errors && parseResult.errors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm font-medium">
+              ⚠️ {parseResult.errors[0]}
+            </div>
+          )}
           {hasData && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4">
               <div className="flex items-center gap-2 text-green-700 font-semibold mb-3"><CheckCircle2 size={16} /> Parsed Successfully</div>
               <button onClick={handleImport} disabled={isImported} className={`w-full py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${isImported ? 'bg-green-600 text-white' : 'bg-purple-600 text-white hover:bg-purple-700'}`}>
-                {isImported ? 'Imported!' : 'Import to Resume Builder'}
+                {isImported ? 'Imported to Editor!' : 'Inject Data to Editor'}
               </button>
             </div>
           )}
@@ -598,12 +489,12 @@ const ProfessionalSummary = () => {
   return (
     <div className="space-y-4 pt-2">
       <label className="block text-xs font-semibold text-gray-600 mb-1.5">Professional Summary</label>
-      <textarea
+      <AutoResizeTextarea
         value={personalInfo.summary || ''}
         onChange={(e) => updatePersonalInfo('summary', e.target.value)}
         placeholder="Brief 2-4 sentence overview of your professional background, key skills, and career goals..."
-        rows={5}
-        className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm bg-white transition-all"
+        rows={3}
+        className="w-full px-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 resize-none text-sm bg-white"
       />
       <p className="text-xs text-gray-400">💡 Lead with years of experience and biggest achievement.</p>
     </div>
@@ -611,12 +502,93 @@ const ProfessionalSummary = () => {
 };
 
 /**
+ * SortableExperienceItem Component
+ */
+const SortableExperienceItem = ({ exp, removeExperience, updateExperience }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: exp.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  return (
+    <motion.div
+      ref={setNodeRef}
+      style={style}
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      className={`bg-white border rounded-xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow relative ${isDragging ? 'ring-2 ring-blue-500 shadow-xl' : 'border-gray-200'}`}
+    >
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 -ml-3 bg-white border border-gray-200 p-1 rounded-md shadow-sm cursor-grab active:cursor-grabbing text-gray-400 hover:text-blue-500 z-10" {...attributes} {...listeners}>
+        <GripVertical size={16} />
+      </div>
+
+      <div className="flex justify-between items-start mb-4 ml-2">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg"><Briefcase className="text-blue-600" size={20} /></div>
+          <div>
+            <h3 className="font-semibold text-gray-800">{exp.position || 'Untitled Position'}</h3>
+            <p className="text-sm text-gray-600">{exp.company || 'Company Name'}</p>
+          </div>
+        </div>
+        <button onClick={() => removeExperience(exp.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={18} /></button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3 ml-2">
+        <div className="relative group">
+          <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={16} />
+          <input type="text" value={exp.company} onChange={(e) => updateExperience(exp.id, 'company', e.target.value)} placeholder="Company" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-gray-50/50 hover:bg-white focus:bg-white" />
+        </div>
+        <div className="relative group">
+          <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={16} />
+          <input type="text" value={exp.position} onChange={(e) => updateExperience(exp.id, 'position', e.target.value)} placeholder="Job Title" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-gray-50/50 hover:bg-white focus:bg-white" />
+        </div>
+        <div className="relative group">
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={16} />
+          <input type="text" value={exp.location} onChange={(e) => updateExperience(exp.id, 'location', e.target.value)} placeholder="Location" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-gray-50/50 hover:bg-white focus:bg-white" />
+        </div>
+        <div className="flex gap-2">
+          <div className="relative flex-1 group">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={16} />
+            <input type="text" value={exp.startDate} onChange={(e) => updateExperience(exp.id, 'startDate', e.target.value)} placeholder="Start Date" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-gray-50/50 hover:bg-white focus:bg-white" />
+          </div>
+          <div className="relative flex-1 group">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={16} />
+            <input type="text" value={exp.endDate} onChange={(e) => updateExperience(exp.id, 'endDate', e.target.value)} placeholder="End Date" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-gray-50/50 hover:bg-white focus:bg-white" />
+          </div>
+        </div>
+      </div>
+      <AutoResizeTextarea value={exp.description} onChange={(e) => updateExperience(exp.id, 'description', e.target.value)} placeholder="• Key achievement..." rows={3} className="w-full ml-2" />
+    </motion.div>
+  );
+};
+
+/**
  * WorkExperience Section
  */
 const WorkExperience = () => {
-  const { experience, addExperience, updateExperience, removeExperience } = useResumeStore();
+  const { experience, addExperience, updateExperience, removeExperience, reorderExperience } = useResumeStore();
   const [isAdding, setIsAdding] = useState(false);
   const [newExperience, setNewExperience] = useState({ company: '', position: '', startDate: '', endDate: '', location: '', description: '' });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      const oldIndex = experience.findIndex((item) => item.id === active.id);
+      const newIndex = experience.findIndex((item) => item.id === over.id);
+      reorderExperience(arrayMove(experience, oldIndex, newIndex));
+    }
+  };
 
   const handleAdd = () => {
     if (newExperience.company && newExperience.position) {
@@ -628,49 +600,86 @@ const WorkExperience = () => {
 
   return (
     <div className="space-y-4 pt-2">
-      <div className="flex items-start gap-2 bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-700">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2 bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-700">
         <Info size={13} className="mt-0.5 flex-shrink-0" />
-        <span>Use <code className="bg-indigo-100 px-1 rounded">• bullet</code> or <code className="bg-indigo-100 px-1 rounded">- dash</code> for lists.</span>
-      </div>
+        <span>Use drag handle to reorder. Use <code className="bg-indigo-100 px-1 rounded">• bullet</code> or <code className="bg-indigo-100 px-1 rounded">- dash</code> for lists.</span>
+      </motion.div>
 
-      <AnimatePresence mode="popLayout">
-        {experience.map((exp, idx) => (
-          <motion.div key={exp.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -100 }} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg"><Briefcase className="text-blue-600" size={20} /></div>
-                <div><h3 className="font-semibold text-gray-800">{exp.position}</h3><p className="text-sm text-gray-600">{exp.company}</p></div>
-              </div>
-              <button onClick={() => removeExperience(exp.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-              <div className="relative"><Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} /><input type="text" value={exp.company} onChange={(e) => updateExperience(exp.id, 'company', e.target.value)} placeholder="Company" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" /></div>
-              <div className="relative"><Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} /><input type="text" value={exp.position} onChange={(e) => updateExperience(exp.id, 'position', e.target.value)} placeholder="Job Title" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" /></div>
-              <div className="relative"><MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} /><input type="text" value={exp.location} onChange={(e) => updateExperience(exp.id, 'location', e.target.value)} placeholder="Location" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" /></div>
-              <div className="flex gap-2"><div className="relative flex-1"><Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} /><input type="text" value={exp.startDate} onChange={(e) => updateExperience(exp.id, 'startDate', e.target.value)} placeholder="Start" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" /></div><div className="relative flex-1"><Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} /><input type="text" value={exp.endDate} onChange={(e) => updateExperience(exp.id, 'endDate', e.target.value)} placeholder="End" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" /></div></div>
-            </div>
-            <textarea value={exp.description} onChange={(e) => updateExperience(exp.id, 'description', e.target.value)} placeholder="• Key achievement..." rows={4} className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-mono" />
-          </motion.div>
-        ))}
-      </AnimatePresence>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={experience.map(e => e.id)} strategy={verticalListSortingStrategy}>
+          <div className="ml-3 pl-2 border-l-2 border-dashed border-gray-100">
+            <AnimatePresence mode="popLayout">
+              {experience.map((exp) => (
+                <SortableExperienceItem key={exp.id} exp={exp} removeExperience={removeExperience} updateExperience={updateExperience} />
+              ))}
+            </AnimatePresence>
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {isAdding ? (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-blue-50 border-2 border-dashed border-blue-300 rounded-xl p-5">
+        <motion.div layout initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="bg-blue-50/50 border-2 border-blue-300 rounded-xl p-5 shadow-sm mt-4">
           <h3 className="font-semibold text-gray-800 mb-4">Add Position</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-            <input type="text" value={newExperience.company} onChange={(e) => setNewExperience({...newExperience, company: e.target.value})} placeholder="Company *" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-            <input type="text" value={newExperience.position} onChange={(e) => setNewExperience({...newExperience, position: e.target.value})} placeholder="Title *" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+            <input type="text" value={newExperience.company} onChange={(e) => setNewExperience({...newExperience, company: e.target.value})} placeholder="Company *" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 text-sm transition-all" />
+            <input type="text" value={newExperience.position} onChange={(e) => setNewExperience({...newExperience, position: e.target.value})} placeholder="Title *" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 text-sm transition-all" />
             <div className="flex gap-2 md:col-span-2">
-              <input type="text" value={newExperience.startDate} onChange={(e) => setNewExperience({...newExperience, startDate: e.target.value})} placeholder="Start" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input type="text" value={newExperience.endDate} onChange={(e) => setNewExperience({...newExperience, endDate: e.target.value})} placeholder="End" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              <input type="text" value={newExperience.startDate} onChange={(e) => setNewExperience({...newExperience, startDate: e.target.value})} placeholder="Start Date" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 text-sm transition-all" />
+              <input type="text" value={newExperience.endDate} onChange={(e) => setNewExperience({...newExperience, endDate: e.target.value})} placeholder="End Date" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 text-sm transition-all" />
             </div>
           </div>
-          <div className="flex gap-2"><button onClick={handleAdd} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">Add</button><button onClick={() => setIsAdding(false)} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm">Cancel</button></div>
+          <div className="flex gap-2 mt-4"><button onClick={handleAdd} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold shadow-md shadow-blue-200 hover:bg-blue-700 transition-all hover:-translate-y-0.5">Add Experience</button><button onClick={() => setIsAdding(false)} className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all">Cancel</button></div>
         </motion.div>
       ) : (
-        <button onClick={() => setIsAdding(true)} className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 hover:bg-indigo-50 flex items-center justify-center gap-2 text-sm font-medium transition-all"><Plus size={16} /> Add Work Experience</button>
+        <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={() => setIsAdding(true)} className="w-full mt-4 py-4 border-2 border-dashed border-blue-200 bg-blue-50/30 rounded-xl text-blue-600 hover:bg-blue-50 flex items-center justify-center gap-2 text-sm font-bold transition-all"><PlusCircle size={18} /> Add Work Experience</motion.button>
       )}
     </div>
+  );
+};
+
+/**
+ * SortableEducationItem Component
+ */
+const SortableEducationItem = ({ edu, removeEducation, updateEducation }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: edu.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  return (
+    <motion.div
+      ref={setNodeRef}
+      style={style}
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      className={`bg-white border rounded-xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow relative ${isDragging ? 'ring-2 ring-emerald-500 shadow-xl' : 'border-gray-200'}`}
+    >
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 -ml-3 bg-white border border-gray-200 p-1 rounded-md shadow-sm cursor-grab active:cursor-grabbing text-gray-400 hover:text-emerald-500 z-10" {...attributes} {...listeners}>
+        <GripVertical size={16} />
+      </div>
+
+      <div className="flex justify-between items-start mb-4 ml-2">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-100 rounded-lg"><GraduationCap className="text-green-600" size={20} /></div>
+          <div><h3 className="font-semibold text-gray-800">{edu.school || 'School Name'}</h3><p className="text-sm text-gray-600">{edu.degree || 'Degree'}</p></div>
+        </div>
+        <button onClick={() => removeEducation(edu.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3 ml-2">
+        <input type="text" value={edu.school} onChange={(e) => updateEducation(edu.id, 'school', e.target.value)} placeholder="School" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm bg-gray-50/50 hover:bg-white focus:bg-white transition-all" />
+        <input type="text" value={edu.degree} onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)} placeholder="Degree" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm bg-gray-50/50 hover:bg-white focus:bg-white transition-all" />
+        <div className="flex gap-2 md:col-span-2">
+          <input type="text" value={edu.startDate} onChange={(e) => updateEducation(edu.id, 'startDate', e.target.value)} placeholder="Start Date" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm bg-gray-50/50 hover:bg-white focus:bg-white transition-all" />
+          <input type="text" value={edu.endDate} onChange={(e) => updateEducation(edu.id, 'endDate', e.target.value)} placeholder="End Date" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm bg-gray-50/50 hover:bg-white focus:bg-white transition-all" />
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
@@ -678,9 +687,23 @@ const WorkExperience = () => {
  * Education Section
  */
 const Education = () => {
-  const { education, addEducation, updateEducation, removeEducation } = useResumeStore();
+  const { education, addEducation, updateEducation, removeEducation, reorderEducation } = useResumeStore();
   const [isAdding, setIsAdding] = useState(false);
   const [newEducation, setNewEducation] = useState({ school: '', degree: '', field: '', startDate: '', endDate: '', location: '', description: '' });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      const oldIndex = education.findIndex((item) => item.id === active.id);
+      const newIndex = education.findIndex((item) => item.id === over.id);
+      reorderEducation(arrayMove(education, oldIndex, newIndex));
+    }
+  };
 
   const handleAdd = () => {
     if (newEducation.school && newEducation.degree) {
@@ -692,22 +715,34 @@ const Education = () => {
 
   return (
     <div className="space-y-4 pt-2">
-      <AnimatePresence mode="popLayout">
-        {education.map((edu, idx) => (
-          <motion.div key={edu.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -100 }} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3"><div className="p-2 bg-green-100 rounded-lg"><GraduationCap className="text-green-600" size={20} /></div><div><h3 className="font-semibold text-gray-800">{edu.school}</h3><p className="text-sm text-gray-600">{edu.degree}</p></div></div>
-              <button onClick={() => removeEducation(edu.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={education.map(e => e.id)} strategy={verticalListSortingStrategy}>
+          <div className="ml-3 pl-2 border-l-2 border-dashed border-gray-100">
+            <AnimatePresence mode="popLayout">
+              {education.map((edu) => (
+                <SortableEducationItem key={edu.id} edu={edu} removeEducation={removeEducation} updateEducation={updateEducation} />
+              ))}
+            </AnimatePresence>
+          </div>
+        </SortableContext>
+      </DndContext>
+      
+      {isAdding ? (
+        <motion.div layout initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="bg-emerald-50/50 border-2 border-emerald-300 rounded-xl p-5 shadow-sm mt-4">
+          <h3 className="font-semibold text-gray-800 mb-4">Add Education</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+            <input type="text" value={newEducation.school} onChange={(e) => setNewEducation({...newEducation, school: e.target.value})} placeholder="School *" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-emerald-500/20 text-sm transition-all" />
+            <input type="text" value={newEducation.degree} onChange={(e) => setNewEducation({...newEducation, degree: e.target.value})} placeholder="Degree *" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-emerald-500/20 text-sm transition-all" />
+            <div className="flex gap-2 md:col-span-2">
+              <input type="text" value={newEducation.startDate} onChange={(e) => setNewEducation({...newEducation, startDate: e.target.value})} placeholder="Start Date" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-emerald-500/20 text-sm transition-all" />
+              <input type="text" value={newEducation.endDate} onChange={(e) => setNewEducation({...newEducation, endDate: e.target.value})} placeholder="End Date" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-emerald-500/20 text-sm transition-all" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-              <input type="text" value={edu.school} onChange={(e) => updateEducation(edu.id, 'school', e.target.value)} placeholder="School" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <input type="text" value={edu.degree} onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)} placeholder="Degree" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <div className="flex gap-2 md:col-span-2"><input type="text" value={edu.startDate} onChange={(e) => updateEducation(edu.id, 'startDate', e.target.value)} placeholder="Start" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" /><input type="text" value={edu.endDate} onChange={(e) => updateEducation(edu.id, 'endDate', e.target.value)} placeholder="End" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" /></div>
-            </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-      <button onClick={() => setIsAdding(true)} className="w-full py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 hover:bg-emerald-50 flex items-center justify-center gap-2 text-sm font-medium transition-all"><Plus size={15} /> Add Education</button>
+          </div>
+          <div className="flex gap-2 mt-4"><button onClick={handleAdd} className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold shadow-md shadow-emerald-200 hover:bg-emerald-700 transition-all hover:-translate-y-0.5">Add Education</button><button onClick={() => setIsAdding(false)} className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-all">Cancel</button></div>
+        </motion.div>
+      ) : (
+        <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={() => setIsAdding(true)} className="w-full mt-4 py-4 border-2 border-dashed border-emerald-200 bg-emerald-50/30 rounded-xl text-emerald-600 hover:bg-emerald-50 flex items-center justify-center gap-2 text-sm font-bold transition-all"><PlusCircle size={18} /> Add Education</motion.button>
+      )}
     </div>
   );
 };
