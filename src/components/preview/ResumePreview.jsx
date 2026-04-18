@@ -1,7 +1,7 @@
 import { useResumeStore } from '../../store/resumeStore';
 import { Download, Share2, Check, ZoomIn, ZoomOut } from 'lucide-react';
 import { downloadPDF, generateShareableLink } from '../../utils/resumeUtils';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ATSClassic from '../../templates/ATSClassic';
 import Astralis from '../../templates/Astralis';
@@ -17,6 +17,30 @@ const ResumePreview = ({ hideTemplateSwitcher, hideActionBar, initialZoom = 0.75
   const [showCopied, setShowCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [zoom, setZoom] = useState(initialZoom);
+  const [responsiveScale, setResponsiveScale] = useState(1);
+  const containerRef = useRef(null);
+
+  // Calculate responsive scale based on container width
+  useEffect(() => {
+    const calculateScale = () => {
+      if (!containerRef.current) return;
+      const containerWidth = containerRef.current.clientWidth;
+      const resumeWidth = 210 * 3.7795275591; // 210mm in pixels (1mm = 3.7795px)
+      const padding = window.innerWidth < 640 ? 16 : 48; // Less padding on mobile
+      const availableWidth = containerWidth - padding;
+      const scale = Math.min(1, availableWidth / resumeWidth);
+      setResponsiveScale(Math.max(scale, 0.35)); // Minimum scale of 0.35
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    // Also calculate after a short delay to ensure container is rendered
+    const timeout = setTimeout(calculateScale, 100);
+    return () => {
+      window.removeEventListener('resize', calculateScale);
+      clearTimeout(timeout);
+    };
+  }, [hideActionBar]); // Recalculate when hideActionBar changes
 
   const resumeData = { personalInfo, education, experience, skills, projects, additionalSections, sectionOrder };
 
@@ -64,7 +88,7 @@ const ResumePreview = ({ hideTemplateSwitcher, hideActionBar, initialZoom = 0.75
         </div>
       )}
 
-      {/* Action Bar - Hidden when hideActionBar is true */}
+      {/* Action Bar */}
       {!hideActionBar && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center gap-2">
@@ -74,79 +98,88 @@ const ResumePreview = ({ hideTemplateSwitcher, hideActionBar, initialZoom = 0.75
               id="download-pdf-btn"
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-all font-medium text-sm disabled:opacity-50 shadow-sm shadow-sky-200"
             >
-              <motion.div
-                animate={isDownloading ? { rotate: 360 } : { rotate: 0 }}
-                transition={{ duration: 1, repeat: isDownloading ? Infinity : 0, ease: 'linear' }}
-              >
+              <motion.div animate={isDownloading ? { rotate: 360 } : { rotate: 0 }} transition={{ duration: 1, repeat: isDownloading ? Infinity : 0, ease: 'linear' }}>
                 <Download size={16} />
               </motion.div>
               {isDownloading ? 'Generating PDF…' : 'Download PDF'}
             </button>
 
-            <button
-              onClick={handleShare}
-              id="share-link-btn"
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium text-sm"
-            >
+            <button onClick={handleShare} className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium text-sm">
               <AnimatePresence mode="wait">
                 {showCopied ? (
-                  <motion.span key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                    <Check size={16} className="text-green-600" />
-                  </motion.span>
+                  <motion.span key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}><Check size={16} className="text-green-600" /></motion.span>
                 ) : (
-                  <motion.span key="share" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                    <Share2 size={16} />
-                  </motion.span>
+                  <motion.span key="share" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}><Share2 size={16} /></motion.span>
                 )}
               </AnimatePresence>
               {showCopied ? 'Copied!' : 'Share'}
             </button>
 
-            {/* Zoom */}
             <div className="flex items-center gap-1 border border-gray-200 rounded-xl overflow-hidden">
-              <button onClick={zoomOut} className="px-2 py-2.5 hover:bg-gray-100 transition-colors text-gray-600" title="Zoom out">
-                <ZoomOut size={14} />
-              </button>
+              <button onClick={zoomOut} className="px-2 py-2.5 hover:bg-gray-100 transition-colors text-gray-600"><ZoomOut size={14} /></button>
               <span className="text-xs text-gray-500 px-1 tabular-nums w-10 text-center">{Math.round(zoom * 100)}%</span>
-              <button onClick={zoomIn} className="px-2 py-2.5 hover:bg-gray-100 transition-colors text-gray-600" title="Zoom in">
-                <ZoomIn size={14} />
-              </button>
+              <button onClick={zoomIn} className="px-2 py-2.5 hover:bg-gray-100 transition-colors text-gray-600"><ZoomIn size={14} /></button>
             </div>
           </div>
         </div>
       )}
 
       {/* Resume Preview Canvas */}
-      <div className="bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl overflow-auto flex-1 relative"
-        style={{ minHeight: hideActionBar ? '500px' : '600px' }}>
-        <div className="flex justify-center items-start min-h-full p-4 md:p-6">
-          <motion.div
-            layout
-            id="resume-preview"
+      <div 
+        ref={containerRef} 
+        className="bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl overflow-auto flex-1 relative custom-scrollbar"
+        style={{ minHeight: hideActionBar ? '350px' : '250px' }}
+      >
+        <div className="flex justify-center items-start min-h-full p-4 sm:p-8 relative">
+          {/* The constraint wrapper that solves the flex-centering transform bug */ }
+          <div
             style={{
-              transform: `scale(${zoom})`,
-              transformOrigin: 'top center',
-              width: '210mm',
-              maxWidth: '100%',
-              backgroundColor: 'white',
-              boxShadow: '0 8px 40px rgba(0,0,0,0.2)',
-              borderRadius: '2px',
-              overflow: 'hidden',
-              marginBottom: zoom < 1 ? `calc((1 - ${zoom}) * -297mm)` : '20px',
+               width: `${210 * 3.7795275591 * (hideActionBar ? responsiveScale : zoom)}px`,
+               height: `${297 * 3.7795275591 * (hideActionBar ? responsiveScale : zoom)}px`,
+               transition: 'width 0.2s ease, height 0.2s ease',
+               flexShrink: 0,
+               position: 'relative'
             }}
           >
-            <AnimatePresence mode="popLayout" initial={false}>
+            <div
+              style={{
+                transform: `scale(${hideActionBar ? responsiveScale : zoom})`,
+                transformOrigin: 'top left',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                willChange: 'transform'
+              }}
+            >
               <motion.div
-                key={activeTemplate}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                layout
+                id="resume-preview"
+                className="resume-preview-export"
+                style={{
+                  width: '210mm',
+                  minWidth: '210mm',
+                  maxWidth: '210mm',
+                  minHeight: '297mm',
+                  backgroundColor: 'white',
+                  boxShadow: '0 8px 40px rgba(0,0,0,0.2)',
+                  borderRadius: '2px',
+                  overflow: 'hidden',
+                }}
               >
-                <TemplateComponent {...resumeData} />
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.div
+                    key={activeTemplate}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <TemplateComponent {...resumeData} />
+                  </motion.div>
+                </AnimatePresence>
               </motion.div>
-            </AnimatePresence>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

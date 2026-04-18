@@ -34,7 +34,8 @@ import {
   Camera,
   Eye,
   EyeOff,
-  CheckCircle2
+  CheckCircle2,
+  Download
 } from 'lucide-react';
 import {
   DndContext,
@@ -53,6 +54,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useResumeStore } from '../../store/resumeStore';
+import { downloadPDF } from '../../utils/resumeUtils';
 import { parseLatex } from '../../utils/latexParser';
 const SECTION_TYPES = [
   { id: 'languages', label: 'Languages' },
@@ -394,7 +396,7 @@ const PersonalInfo = () => {
         <ImageUploader />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {fields.map((field) => (
           <div key={field.name} className={`relative ${field.col === 2 ? 'col-span-2' : ''}`}>
             <label className="block text-xs font-semibold text-gray-600 mb-1.5">{field.label}</label>
@@ -433,9 +435,9 @@ const PersonalInfo = () => {
               key={index}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-12 gap-3 items-end bg-gray-50/50 p-3 rounded-xl border border-gray-100 relative group"
+              className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end bg-gray-50/50 p-3 rounded-xl border border-gray-100 relative group"
             >
-              <div className="col-span-5">
+              <div className="sm:col-span-5">
                 <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Platform</label>
                 <div className="relative">
                   <select
@@ -450,7 +452,7 @@ const PersonalInfo = () => {
                   <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 </div>
               </div>
-              <div className="col-span-6">
+              <div className="sm:col-span-6">
                 <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase">URL / Handle</label>
                 <input
                   type="text"
@@ -460,7 +462,7 @@ const PersonalInfo = () => {
                   className="w-full px-3 py-1.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-xs bg-white transition-all shadow-sm"
                 />
               </div>
-              <div className="col-span-1 flex justify-end">
+              <div className="sm:col-span-1 flex justify-end">
                 <button
                   onClick={() => removeSocialLink(index)}
                   className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
@@ -908,12 +910,22 @@ const colorMap = {
 
 const ResumeFormEditor = () => {
   const store = useResumeStore();
-  const { sectionOrder = [], reorderSections, syncSectionOrder } = store;
+  const { sectionOrder = [], reorderSections, syncSectionOrder, personalInfo } = store;
   const navigate = useNavigate();
   const [expandedSections, setExpandedSections] = useState(['personalInfo']);
   const [draggedSection, setDraggedSection] = useState(null);
   const [activeTab, setActiveTab] = useState('edit');
   const [isReady, setIsReady] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      await downloadPDF('resume-preview', `${personalInfo.firstName || 'my'}-resume.pdf`);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   useEffect(() => {
     if (syncSectionOrder) syncSectionOrder();
@@ -941,9 +953,9 @@ const ResumeFormEditor = () => {
   return (
     <div className="flex flex-col gap-4">
       {/* Tab Bar */}
-      <div className="bg-white rounded-2xl shadow-sm border p-2 flex gap-2">
-        <button onClick={() => setActiveTab('edit')} className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${activeTab === 'edit' ? 'bg-sky-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}><User size={15} /> Build Resume</button>
-        <button onClick={() => setActiveTab('latex')} className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${activeTab === 'latex' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}><Code2 size={15} /> Import LaTeX</button>
+      <div className="bg-white rounded-2xl shadow-sm border p-1.5 sm:p-2 flex gap-1.5 sm:gap-2">
+        <button onClick={() => setActiveTab('edit')} className={`flex-1 py-2 sm:py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${activeTab === 'edit' ? 'bg-sky-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}><User size={14} /> <span className="whitespace-nowrap">Build Resume</span></button>
+        <button onClick={() => setActiveTab('latex')} className={`flex-1 py-2 sm:py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${activeTab === 'latex' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}><Code2 size={14} /> <span className="whitespace-nowrap">Import LaTeX</span></button>
       </div>
 
       <AnimatePresence mode="wait">
@@ -957,14 +969,14 @@ const ResumeFormEditor = () => {
               const isExt = expandedSections.includes(sid);
               const colors = colorMap[sec.color];
               return (
-                <motion.div key={sid} draggable onDragStart={() => setDraggedSection(sid)} onDragOver={(e) => handleDragOver(e, sid)} onDragEnd={() => setDraggedSection(null)} layout className={`bg-white rounded-2xl shadow-sm border border-l-4 ${colors.border} overflow-hidden transition-all ${draggedSection === sid ? 'opacity-50 scale-98 shadow-lg' : 'hover:shadow-md'}`}>
-                  <button onClick={() => toggleSection(sid)} className="w-full px-4 py-3.5 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3"><GripVertical className="text-gray-300" size={18} /><div className={`p-1.5 rounded-lg ${colors.bg}`}><sec.icon className={colors.icon} size={16} /></div><span className="font-semibold text-gray-800 text-sm">{sec.label}</span></div>
-                    <motion.div animate={{ rotate: isExt ? 180 : 0 }} transition={{ duration: 0.2 }}><ChevronDown className="text-gray-400" size={18} /></motion.div>
+                <motion.div key={sid} draggable onDragStart={() => setDraggedSection(sid)} onDragOver={(e) => handleDragOver(e, sid)} onDragEnd={() => setDraggedSection(null)} layout className={`bg-white rounded-xl sm:rounded-2xl shadow-sm border border-l-4 ${colors.border} overflow-hidden transition-all ${draggedSection === sid ? 'opacity-50 scale-98 shadow-lg' : 'hover:shadow-md'}`}>
+                  <button onClick={() => toggleSection(sid)} className="w-full px-3 sm:px-4 py-3 sm:py-3.5 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-2 sm:gap-3"><GripVertical className="text-gray-300 flex-shrink-0" size={16} /><div className={`p-1.5 rounded-lg ${colors.bg}`}><sec.icon className={colors.icon} size={14} /></div><span className="font-semibold text-gray-800 text-xs sm:text-sm">{sec.label}</span></div>
+                    <motion.div animate={{ rotate: isExt ? 180 : 0 }} transition={{ duration: 0.2 }}><ChevronDown className="text-gray-400" size={16} /></motion.div>
                   </button>
                   <AnimatePresence>{isExt && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
-                      <div className="px-5 pb-5 pt-1 border-t border-gray-100"><SectionComp /></div>
+                      <div className="px-3 sm:px-5 pb-4 sm:pb-5 pt-1 border-t border-gray-100"><SectionComp /></div>
                     </motion.div>
                   )}</AnimatePresence>
                 </motion.div>
@@ -979,10 +991,27 @@ const ResumeFormEditor = () => {
       </AnimatePresence>
 
       {activeTab === 'edit' && (
-        <div className="pt-4 mt-2">
-          <button onClick={() => navigate('/builder/download')} className="w-full py-4 bg-sky-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-sky-200 hover:bg-sky-600 transition-all text-sm uppercase tracking-wider">
-            Review & Download Resume <ArrowRight size={16} />
-          </button>
+        <div className="pt-3 sm:pt-4 mt-2 space-y-2">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button 
+              onClick={handleDownload} 
+              disabled={isDownloading}
+              className={`flex-1 py-2.5 sm:py-3.5 ${isDownloading ? 'bg-gray-100 text-gray-400' : 'bg-emerald-500 hover:bg-emerald-600 text-white'} rounded-xl font-bold flex items-center justify-center gap-2 shadow-emerald-200 transition-all text-xs sm:text-sm`}
+            >
+              {isDownloading ? (
+                <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Download size={14} className="sm:w-4 sm:h-4" />
+              )}
+              <span className="whitespace-nowrap">{isDownloading ? 'Downloading...' : 'Download PDF'}</span>
+            </button>
+            <button 
+              onClick={() => navigate('/builder/download')} 
+              className="flex-1 py-2.5 sm:py-3.5 bg-sky-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-sky-200 hover:bg-sky-600 transition-all text-xs sm:text-sm"
+            >
+              <span className="whitespace-nowrap">Review</span> <ArrowRight size={14} className="sm:w-4 sm:h-4" />
+            </button>
+          </div>
         </div>
       )}
     </div>

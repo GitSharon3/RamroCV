@@ -130,7 +130,7 @@ export const StepIndicator = () => {
                   ) : step.id}
                 </motion.div>
                 <span
-                  className={`text-xs sm:text-sm transition-colors duration-300 whitespace-nowrap ${
+                  className={`text-[10px] sm:text-sm transition-colors duration-300 whitespace-nowrap ${isActive ? 'block' : 'hidden sm:block'} ${
                     isActive ? 'text-gray-900 font-bold' : isCompleted ? 'text-gray-700 font-semibold' : 'text-gray-400 font-semibold'
                   }`}
                 >
